@@ -13,33 +13,37 @@ APP_FOLDER = os.path.dirname(__file__)
 TEST_INPUTS = os.path.join(APP_FOLDER, "tests/files")
 AUTH_TOKEN = secrets.token_hex(32)
 
-# Global notebook information.
-notebook = dict(
-    name="Sample Notebook",
-    path=os.path.join(TEST_INPUTS, "sample_notebook.ipynb"), # Placeholder
-    nb=None, # Loaded notebook content
-    last_executed_cell=-1,
-)
+class LNBook(object):
+    """This class implements an LNBook and its operations."""
+    
+    def __init__(self, notebook_path):
+        self.path = notebook_path
+        self.name = os.path.splitext(os.path.basename(notebook_path))[0]
+        self.nb = None
+        self.last_executed_cell = -1
+        self.load_notebook()
 
+    def load_notebook(self):
+        """Loads the notebook from the specified path."""
+        with open(self.path) as f:
+            self.nb = json.load(f)
+            # DEBUG: Adds explanations to each code cell.
+            for cell in self.nb['cells']:
+                if cell['cell_type'] == 'code':
+                    explanation = [
+                        "This cell does something interesting.\n",
+                        " * It is nice to look at\n",
+                        " * It might be even interesting to understand\n",
+                    ]
+                    cell['metadata']['explanation'] = explanation
+
+                    
+notebook_path = os.path.join(TEST_INPUTS, 'example_notebook.ipynb')
 if len(sys.argv) > 1:
-    notebook['path'] = os.path.abspath(sys.argv[1])
-    notebook['name'] = os.path.splitext(os.path.basename(notebook['path']))[0]
-
-# Loads the notebook.
-with open(notebook['path']) as f:
-    notebook['nb'] = json.load(f)
-    # DEBUG: Adds explanations to each code cell.
-    # Adds to each code cell a markdown component that explains the cell's code. 
-    for cell in notebook['nb']['cells']:
-        if cell['cell_type'] == 'code':
-            explanation = [
-                "This cell does something interesting.\n",
-                " * It is nice to look at\n",
-                " * It might be even interesting to understand\n",
-            ]
-            cell['metadata']['explanation'] = explanation
-
-
+    notebook_path = os.path.abspath(sys.argv[1]) 
+    
+notebook = LNBook(notebook_path)
+                    
 # Static file routes 
 @route('/js/<filepath:path>')
 def server_static_js(filepath):
@@ -64,13 +68,13 @@ def require_token(func):
 @view('index.html')
 @require_token
 def index():
-    return dict(notebook_name=notebook['name'])
+    return dict(notebook_name=notebook.name)
 
 @get('/get_notebook')
 @require_token
 def get_notebook():
     return dict(
-        nb=notebook['nb'],
+        nb=notebook.nb,
     )
     
 @post('/edit_explanation')
