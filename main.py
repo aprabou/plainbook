@@ -2,14 +2,15 @@
 
 from bottle import route, template, get, post, static_file, view, HTTPError
 from bottle import run, default_app, request
-import json
-import os
-import socket
-import webbrowser
-import sys
-import secrets
-import threading
 from functools import wraps
+import json
+import nbformat
+import os
+import secrets
+import socket
+import sys
+import threading
+import webbrowser
 
 APP_FOLDER = os.path.dirname(__file__)
 TEST_INPUTS = os.path.join(APP_FOLDER, "tests/files")
@@ -29,17 +30,26 @@ class LNBook(object):
     def load_notebook(self):
         """Loads the notebook from the specified path."""
         with open(self.path) as f:
-            self.nb = json.load(f)
+            self.nb = nbformat.read(f, as_version=4)            
             # DEBUG: Adds explanations to each code cell.
-            for cell in self.nb['cells']:
-                if cell['cell_type'] == 'code':
+            for cell in self.nb.cells:
+                if cell.cell_type == 'code':
                     explanation = [
                         "This cell does something interesting.\n",
                         " * It is nice to look at\n",
                         " * It might be even interesting to understand\n",
                     ]
-                    cell['metadata']['explanation'] = explanation
-
+                    cell.metadata['explanation'] = explanation
+                    
+    def get_cell_json(self, index):
+        """Returns the JSON representation of a cell by index."""
+        if index < 0 or index >= len(self.nb.cells):
+            raise IndexError("Cell index out of range")
+        return self.nb.cells[index]
+    
+    def get_json(self):
+        """Returns the JSON representation of the entire notebook."""
+        return self.nb
                     
 notebook_path = os.path.join(TEST_INPUTS, 'sample_notebook.ipynb')
 if len(sys.argv) > 1:
@@ -81,7 +91,7 @@ def index():
 @require_token
 def get_notebook():
     return dict(
-        nb=notebook.nb,
+        nb=notebook.get_json(),
     )
     
 @post('/edit_explanation')
