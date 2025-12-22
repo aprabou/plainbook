@@ -1,3 +1,5 @@
 bottle
+jupyter_client
+nbclient
 nbformat
 waitress

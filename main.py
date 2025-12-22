@@ -1,20 +1,30 @@
 #!/usr/bin/env python3
 
-from bottle import route, template, get, post, static_file, view, HTTPError
-from bottle import run, default_app, request
+# General imports
 from functools import wraps
 import json
-import nbformat
 import os
 import secrets
 import socket
 import sys
 import threading
 import webbrowser
+# Bottle imports
+from bottle import route, template, get, post, static_file, view, HTTPError
+from bottle import run, default_app, request
+# Notebook imports
+from jupyter_client import KernelManager
+from nbclient import NotebookClient
+from nbclient.exceptions import CellExecutionError
+import nbformat
 
 APP_FOLDER = os.path.dirname(__file__)
 TEST_INPUTS = os.path.join(APP_FOLDER, "tests/files")
 AUTH_TOKEN = secrets.token_hex(32)
+
+class ExecutionError(Exception):
+    """Custom exception for execution errors in LNBook."""
+    pass
 
 class LNBook(object):
     """This class implements an LNBook and its operations."""
@@ -26,6 +36,12 @@ class LNBook(object):
         self._lock = threading.Lock()
         self.last_executed_cell = -1
         self.load_notebook()
+        # Starts the kernel.
+        self.km = KernelManager()
+        self.km.start_kernel()
+        self.kc = self.km.client()
+        self.kc.start_channels()
+        self.client = NotebookClient(nb=self.nb, km=self.km, kc=self.kc)
 
     def load_notebook(self):
         """Loads the notebook from the specified path."""
@@ -40,6 +56,25 @@ class LNBook(object):
                         " * It might be even interesting to understand\n",
                     ]
                     cell.metadata['explanation'] = explanation
+                    
+    def execute_cell(self, index):
+        """Executes a code cell by index and returns the output."""
+        with self._lock:
+            if index < 0 or index >= len(self.nb.cells):
+                raise IndexError("Cell index out of range")
+            cell = self.nb.cells[index]
+            if cell.cell_type != 'code':
+                return None, "Not a code cell"
+            if index <= self.last_executed_cell:
+                return cell.outputs, "Cached"
+            if index > self.last_executed_cell + 1:
+                raise ExecutionError("Cannot execute cell out of order")
+            try:
+                self.client.execute_cell(cell, index)
+                self.last_executed_cell = index
+                return cell.outputs, 'ok'
+            except CellExecutionError as e:
+                raise ExecutionError(f"Error executing cell {index}: {str(e)}")
                     
     def get_cell_json(self, index):
         """Returns the JSON representation of a cell by index."""
@@ -115,6 +150,24 @@ def edit_code():
     # For this example, we just log it
     print(f"Updated code for cell {cell_index}: {source}")
     return dict(status='success')
+
+@get('/last_valid_cell')
+@require_token
+def last_valid_cell():
+    last_valid = notebook.last_executed_cell
+    return dict(last_valid_cell=last_valid)
+
+@post('/execute_cell')
+@require_token
+def execute_cell():
+    data = request.json
+    cell_index = data.get('cell_index')
+    try:
+        outputs, details = notebook.execute_cell(cell_index)
+        return dict(status="ok", details=details, outputs=outputs)
+    except ExecutionError as e:
+        return dict(status='error', message=str(e))
+
 
 ################################
 # Server startup
