@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-from bottle import route, template, request, get, post, static_file, view, run, HTTPError
+from bottle import route, template, get, post, static_file, view, HTTPError
+from bottle import run, default_app, request
 import json
 import os
 import socket
 import webbrowser
 import sys
 import secrets
+import threading
 from functools import wraps
 
 APP_FOLDER = os.path.dirname(__file__)
@@ -20,6 +22,7 @@ class LNBook(object):
         self.path = notebook_path
         self.name = os.path.splitext(os.path.basename(notebook_path))[0]
         self.nb = None
+        self._lock = threading.Lock()
         self.last_executed_cell = -1
         self.load_notebook()
 
@@ -38,7 +41,7 @@ class LNBook(object):
                     cell['metadata']['explanation'] = explanation
 
                     
-notebook_path = os.path.join(TEST_INPUTS, 'example_notebook.ipynb')
+notebook_path = os.path.join(TEST_INPUTS, 'sample_notebook.ipynb')
 if len(sys.argv) > 1:
     notebook_path = os.path.abspath(sys.argv[1]) 
     
@@ -52,6 +55,10 @@ def server_static_js(filepath):
 @route('/css/<filepath:path>')
 def server_static_css(filepath):
     return static_file(filepath, root=os.path.join(APP_FOLDER, 'css'))
+
+@route('/fonts/<filepath:path>')
+def server_static_fonts(filepath):
+    return static_file(filepath, root=os.path.join(APP_FOLDER, 'fonts'))
 
 # Authentication decorator
 def require_token(func):
@@ -109,6 +116,16 @@ def find_free_port(start_port):
             if s.connect_ex(('localhost', port)) != 0:
                 return port
             port += 2
+            
+def logger_middleware(app):
+    def wrapper(environ, start_response):
+        # This function catches the status code before it's sent to the browser
+        def logging_start_response(status, headers, exc_info=None):
+            print(f"{environ['REQUEST_METHOD']} {environ['PATH_INFO']} - {status}")
+            return start_response(status, headers, exc_info)
+        
+        return app(environ, logging_start_response)
+    return wrapper
     
 if __name__ == '__main__':    
     port = find_free_port(8080)
@@ -117,4 +134,6 @@ if __name__ == '__main__':
         webbrowser.open(url)
     except Exception:
         print(f"If the browser does not open, please load this URL: {url}")
-    run(host='localhost', port=port, debug=True)
+    app_with_logging = logger_middleware(default_app())
+    run(app=app_with_logging, host='localhost', port=port, server='waitress', 
+        threads=16, debug=True)
