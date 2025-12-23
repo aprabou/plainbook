@@ -47,6 +47,7 @@ class LNBook(object):
                         " * It might be even interesting to understand\n",
                     ]
                     cell.metadata['explanation'] = explanation
+            
                     
     def execute_cell(self, index):
         """Executes a code cell by index and returns the output."""

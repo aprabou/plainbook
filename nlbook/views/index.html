@@ -12,55 +12,9 @@
     </style>
   </head>
   <body class="has-navbar-fixed-top">
-    <!-- Navigation bar -->
-    <nav class="navbar is-dark is-fixed-top" role="navigation" aria-label="main navigation">
-      <div class="navbar-brand">
 
-        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="the-navbar-menu"
-           onclick="this.classList.toggle('is-active');document.getElementById(this.dataset.target).classList.toggle('is-active');">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
-
-      <div id="the-navbar-menu" class="navbar-menu">
-        <div class="navbar-start">
-          <div class="navbar-item">
-            <div class="buttons">
-              <button id="btn-run-all" class="button is-primary is-light"
-                      onclick="window.dispatchEvent(new CustomEvent('nlbook:run-all'));">
-                <span class="icon"><i class="fa fa-play"></i></span>
-                <span>Run All</span>
-              </button>
-              <button id="btn-interrupt" class="button is-danger is-light"
-                      onclick="window.dispatchEvent(new CustomEvent('nlbook:interrupt-kernel'));">
-                <span class="icon"><i class="fa fa-stop"></i></span>
-                <span>Interrupt Kernel</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="navbar-end">
-          <div class="navbar-item">
-            <div class="buttons">
-              <button id="btn-settings" class="button is-info is-light"
-                      onclick="window.dispatchEvent(new CustomEvent('nlbook:open-settings'));">
-                <span class="icon"><i class="fa fa-cog"></i></span>
-                <span>Settings</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
-
-    <div class="section">
-      <h1 class="title">{{notebook_name}}</h1>
-      <div id="app"></div>
-    </div>
-
+    <div id="app"></div>
+    
     <footer class="footer">
     </footer>
   </body>

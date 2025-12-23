@@ -118,6 +118,15 @@ def execute_cell():
     except ExecutionError as e:
         return dict(status='error', message=str(e))
 
+@post('/interrupt_kernel')
+@require_token
+def interrupt_kernel():
+    try:
+        notebook.interrupt_kernel()
+        return dict(status='success')
+    except Exception as e:
+        return dict(status='error', message=str(e))
+
 
 ################################
 # Server startup

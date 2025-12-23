@@ -18,6 +18,10 @@ createApp({
         const error = ref(null);
         const activeIndex = ref(-1);
 
+        // For running a notebook.
+        const running = ref(false);
+        const lastRunIndex = ref(-1);
+
         // 2. Define the fetch logic
         const fetchNotebook = async () => {
             try {
@@ -87,7 +91,30 @@ createApp({
             }
         };
 
-        const sendRunToServer = async (cellIndex) => {
+        // Runs cells up to the present one. 
+        const doRun = async (cellIndex) => {
+            if (!running.value) {
+                running.value = true;
+                for (let i = lastRunIndex.value + 1; i <= cellIndex; i++) {
+                    await runOneCell(i);
+                }
+                running.value = false;
+                lastRunIndex.value = cellIndex;
+            }
+        };
+
+        const runAllCells = async () => {
+            if (!running.value) {
+                running.value = true;
+                for (let i = lastRunIndex.value + 1; i < notebook.value.cells.length; i++) {
+                    await runOneCell(i);
+                }
+                running.value = false;
+                lastRunIndex.value = notebook.value.cells.length - 1;
+            }
+        };
+
+        const runOneCell = async (cellIndex) => {
             try {
                 const response = await fetch(`/execute_cell?token=${authToken}`, {
                     method: 'POST',
@@ -107,6 +134,20 @@ createApp({
                 }
             } catch (err) {
                 console.error('Run error:', err);
+            }
+        };
+
+        const interruptKernel = async () => {
+            try {
+                const response = await fetch(`/interrupt_kernel?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) throw new Error('Failed to interrupt kernel');
+                console.log('Kernel interrupted');
+                running.value = false;
+            } catch (err) {
+                console.error('Interrupt error:', err);
             }
         };
 
@@ -130,22 +171,59 @@ createApp({
         });
 
         return { notebook, loading, error, sendExplanationToServer, sendCodeToServer, activeIndex, 
-            setActiveCell, sendRedoToServer, sendRunToServer };
+            setActiveCell, sendRedoToServer, doRun, running, lastRunIndex, runAllCells, interruptKernel };
     },
     
     template: /* html */ `
+    <!-- Navigation bar -->
+    <nav class="navbar is-dark is-fixed-top" role="navigation" aria-label="main navigation">
+        <div id="the-navbar-menu" class="navbar-menu">
+            <div class="navbar-start">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <button v-if="!running && notebook && lastRunIndex < notebook.cells.length - 1"
+                            @click="runAllCells"
+                            class="button is-primary is-light">
+                            <span class="icon"><i class="fa fa-play"></i></span>
+                            <span>Run All</span>
+                        </button>
+                        <button v-else-if="!running && notebook && lastRunIndex >= notebook.cells.length - 1"
+                                disabled
+                                class="button is-primary is-light">
+                            <span class="icon"><i class="fa fa-check"></i></span>
+                            <span>Up to Date</span>
+                        </button>
+                        <button v-else-if="running"
+                                @click="interruptKernel"
+                                class="button is-danger is-light">
+                            <span class="icon"><i class="fa fa-stop"></i></span>
+                            <span>Running...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <button id="btn-settings" class="button is-info is-light" @click="openSettings">
+                            <span class="icon"><i class="fa fa-cog"></i></span>
+                            <span>Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="section">
         <div class="notebook-container px-2 py-2">
-            
             <div v-if="loading" class="has-text-centered py-6">
                 <button class="button is-loading is-ghost is-large">Loading</button>
                 <p class="has-text-grey">Fetching notebook data...</p>
             </div>
-
             <div v-else-if="error" class="notification is-danger is-light">
                 <button class="delete" @click="error = null"></button>
                 <strong>Error:</strong> {{ error }}
             </div>
-
             <div v-else-if="notebook">
                 <div v-for="(cell, index) in notebook.cells" :key="index"
                      class="notebook-cell box p-0 mb-5 is-clipped shadow-sm"
@@ -161,7 +239,7 @@ createApp({
                             <explanation-editor v-model:source="cell.metadata.explanation" :isActive="activeIndex === index" 
                             @save="(content) => sendExplanationToServer(content, index)" 
                             @redo="() => sendRedoToServer(index)" 
-                            @run="() => sendRunToServer(index)" />
+                            @run="() => doRun(index)" />
                         </div>
                         <code-cell v-model:source="cell.source" :execution-count="cell.execution_count" @save="(content) => sendCodeToServer(content, index)" />
                         
@@ -172,6 +250,7 @@ createApp({
                 </div>
             </div>
         </div>
+    </div>
     `
 }).mount('#app');
 
