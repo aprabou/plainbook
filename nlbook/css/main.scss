@@ -34,3 +34,19 @@ pre[class*="language-"] {
 [v-cloak] {
   display: none;
 }
+
+// Ensure navbar is always visible (not collapsed)
+.navbar-menu {
+  display: flex !important;
+}
+
+// Hide button text on narrow screens, show only icons
+@media screen and (max-width: 768px) {
+  .navbar-item .button span:not(.icon) {
+    display: none !important;
+  }
+  .navbar-item .button {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

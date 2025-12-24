@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # General imports
 import argparse
 from functools import wraps
@@ -17,7 +15,8 @@ from bottle import run, default_app, request, TEMPLATE_PATH
 import sys
 print(f"DEBUGGER PYTHON: {sys.executable}")
 
-from nlbook.nlbook import LNBook, ExecutionError
+# NLBook imports
+from .notebook import LNBook, ExecutionError
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
@@ -38,6 +37,8 @@ args = parser.parse_args()
 AUTH_TOKEN = "secret" if args.debug else secrets.token_hex(32)
                     
 notebook_path = os.path.abspath(args.notebook)
+if args.debug:
+    notebook_path = os.path.join(TEST_INPUTS, 'sample_notebook.ipynb')
     
 notebook = LNBook(notebook_path)
                     
@@ -66,10 +67,9 @@ def require_token(func):
 
 # Main routes
 @get('/')
-@view('index.html')
 @require_token
 def index():
-    return dict(notebook_name=notebook.name)
+    return static_file('index.html', root=os.path.join(APP_FOLDER, 'views'))
 
 @get('/get_notebook')
 @require_token
@@ -162,9 +162,4 @@ def main():
             print(f"If the browser does not open, please load this URL: {url}")
     app_with_logging = logger_middleware(default_app()) if args.debug else default_app()
     run(app=app_with_logging, host='localhost', port=port, server='waitress', 
-        threads=16, debug=args.debug)
-
-
-if __name__ == '__main__': 
-    
-    main()
+        threads=16, debug=args.debug, reloader=args.debug)
