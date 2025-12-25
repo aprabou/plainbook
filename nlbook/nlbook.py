@@ -14,10 +14,11 @@ class ExecutionError(Exception):
     """Custom exception for execution errors in LNBook."""
     pass
 
-class LNBook(object):
+class NLBook(object):
     """This class implements an LNBook and its operations."""
     
     def __init__(self, notebook_path):
+        print(f"Initializing LNBook for {notebook_path}...")
         self.path = notebook_path
         self.name = os.path.splitext(os.path.basename(notebook_path))[0]
         self.nb = None
@@ -49,10 +50,29 @@ class LNBook(object):
                         " * It might be even interesting to understand\n",
                     ]
                     cell.metadata['explanation'] = explanation
+                    
+    def _heal_client(self):
+        # 1. Ensure the NotebookClient has the KernelClient reference
+        if self.client.kc is None:
+            self.client.kc = self.kc
+        # 2. HEALING STEP: Check if sockets are actually alive
+        # If the shell_channel socket is None, the channels have dropped.
+        try:
+            if not self.kc.shell_channel.socket:
+                print("Re-starting dropped channels...")
+                self.kc.start_channels()
+        except (AttributeError, RuntimeError):
+            # In case the channel object itself isn't fully initialized
+            self.kc.start_channels()
+        # 3. Ensure the NotebookClient internal state is synchronized
+        # This re-binds the internal managers used by async_execute_cell
+        if not hasattr(self.client, 'km') or self.client.km is None:
+            self.client.km = self.km
                                 
     def execute_cell(self, index):
         """Executes a code cell by index and returns the output."""
         with self._lock:
+            print(f"Executing cell {index} with last executed cell {self.last_executed_cell}...")
             if index < 0 or index >= len(self.nb.cells):
                 raise IndexError("Cell index out of range")
             cell = self.nb.cells[index]
@@ -65,15 +85,7 @@ class LNBook(object):
             try:
                 # For some reason, the client may have forgotten the kernel client
                 # due to threading. 
-                if self.client.kc is None:
-                    # Ensure the current worker thread has an event loop
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                    self.client.kc = self.kc
-                assert self.client.km.is_alive()
+                self._heal_client()
                 self.client.execute_cell(cell, index)
                 self.last_executed_cell = index
                 return cell.outputs, 'ok'
@@ -83,12 +95,37 @@ class LNBook(object):
     def reset_kernel(self):
         """Resets the kernel."""
         with self._lock:
-            self.kc.stop_channels()
-            self.km.restart_kernel(now=True)
+            self._heal_client()
+            print("Resetting kernel and creating new client...")
+            # 1. Properly stop and discard the old client
+            if self.kc:
+                try:
+                    self.kc.stop_channels()
+                except Exception:
+                    pass # Already stopped or dead
+            # 2. Shutdown the old kernel process
+            if self.km:
+                self.km.shutdown_kernel(now=True)
+            if hasattr(self.km, 'context') and self.km.context:
+                try:
+                    self.km.context.destroy(linger=0)
+                except Exception:
+                    pass
+            # 3. Initialize a NEW KernelManager
+            self.km = KernelManager()
+            self.km.start_kernel()
+            # 4. OBTAIN A NEW CLIENT INSTANCE
+            # Overwriting self.kc with a fresh object is mandatory here.
+            self.kc = self.km.client()
+            # 5. Start channels on the NEW client (this will NOT error)
             self.kc.start_channels()
+            # 6. Update the NotebookClient with the new references
+            self.client.km = self.km
             self.client.kc = self.kc
+            # 7. Re-initialize the internal async state
             self.client.setup_kernel()
             self.last_executed_cell = -1
+            print("Kernel reset successfully.")
                     
     def get_cell_json(self, index):
         """Returns the JSON representation of a cell by index."""
@@ -114,7 +151,9 @@ class LNBook(object):
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
                     loop.stop()
-                loop.close()
+                # Closing the loop prevents the ResourceWarning
+                if not loop.is_closed():
+                    loop.close()
             except RuntimeError:
                 # Loop already closed or doesn't exist
                 pass

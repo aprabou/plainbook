@@ -1,5 +1,6 @@
 # General imports
 import argparse
+import asyncio
 from functools import wraps
 import json
 import os
@@ -14,8 +15,8 @@ from bottle import run, default_app, request, TEMPLATE_PATH
 
 # print(f"DEBUGGER PYTHON: {sys.executable}")
 
-# LNBook imports
-from .nlbook import LNBook, ExecutionError
+# NLBook imports
+from .nlbook import NLBook, ExecutionError
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
@@ -38,7 +39,7 @@ notebook_path = os.path.abspath(args.notebook)
 if args.debug:
     notebook_path = os.path.join(TEST_INPUTS, 'sample_notebook.ipynb')
     
-notebook = LNBook(notebook_path)
+notebook = NLBook(notebook_path)
 assert notebook.kc is not None
 assert notebook.km.is_alive()
                     
@@ -121,11 +122,8 @@ def execute_cell():
 @post('/reset_kernel')
 @require_token
 def reset_kernel():
-    try:
-        notebook.reset_kernel()
-        return dict(status='success')
-    except Exception as e:
-        return dict(status='error', message=str(e))
+    notebook.reset_kernel()
+    return dict(status='success')
 
 @post('/interrupt_kernel')
 @require_token
@@ -171,8 +169,17 @@ def main():
             print(f"If the browser does not open, please load this URL: {url}")
     app_with_logging = logger_middleware(default_app()) if args.debug else default_app()
     # Do not use reloader=True. 
-    run(app=app_with_logging, host='localhost', port=port, server='waitress', 
-        threads=16, debug=args.debug)
+    try:
+        run(app=app_with_logging, host='localhost', port=port, server='waitress', 
+            threads=16, debug=args.debug)
+    finally:
+        # This provides a final safety net for the main thread loop
+        try:
+            loop = asyncio.get_event_loop()
+            if not loop.is_closed():
+                loop.close()
+        except:
+            pass
 
 if __name__ == '__main__': 
     main()
