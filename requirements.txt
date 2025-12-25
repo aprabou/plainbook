@@ -1,6 +1,6 @@
 bottle
+cherrypy
 ipykernel
 jupyter_client
 nbclient
 nbformat
-waitress

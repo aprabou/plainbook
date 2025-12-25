@@ -159,7 +159,7 @@ def logger_middleware(app):
     
 def main():   
     port = find_free_port(8080)
-    url = f"http://127.0.0.1:{port}/?token={AUTH_TOKEN}"
+    url = f"http://localhost:{port}/?token={AUTH_TOKEN}"
     if args.debug:  
         print(f"Please load this URL: {url}")
     else:
@@ -170,8 +170,9 @@ def main():
     app_with_logging = logger_middleware(default_app()) if args.debug else default_app()
     # Do not use reloader=True. 
     try:
-        run(app=app_with_logging, host='localhost', port=port, server='waitress', 
-            threads=16, debug=args.debug)
+        run(app=app_with_logging, host='localhost', port=port, server='cheroot',
+            numthreads=10, 
+            debug=args.debug)
     finally:
         # This provides a final safety net for the main thread loop
         try:
