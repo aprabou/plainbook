@@ -75,28 +75,43 @@
                 <strong>Error:</strong> {{ error }}
             </div>
             <div v-else="notebook">
-                <div v-for="(cell, index) in notebook.cells" :key="index"
-                     class="notebook-cell box p-0 mb-5 is-clipped shadow-sm"
-                     @click="setActiveCell(index)"
-                     :style="{
-                        border: activeIndex === index ? '2px solid #1d4ed8' : '1px solid transparent',
-                        cursor: 'pointer'
-                     }">
-                    <markdown-cell v-if="cell.cell_type === 'markdown'" :source="cell.source" />
+                <div v-for="(cell, index) in notebook.cells" :key="index">
+                    <div v-if="activeIndex === index" class="py-1" style="display:flex; justify-content:center; gap:0.5rem;">
+                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index - 1, 'markdown')">Insert Comment</button>
+                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index - 1, 'code')">Insert Action</button>
+                    </div>
 
-                    <div v-if="cell.cell_type === 'code'">
-                        <div v-if="cell.metadata?.explanation" class="has-background-light p-0 border-bottom">
-                            <explanation-editor v-model:source="cell.metadata.explanation" :isActive="activeIndex === index" 
-                                                :index="index" :asRead="asRead" :lastRunIndex="lastRunIndex"
-                            @save="(content) => sendExplanationToServer(content, index)" 
-                            @redo="() => sendRedoToServer(index)" 
-                            @run="() => runCell(index)" />
+                    <div class="notebook-cell box p-0 mb-2 is-clipped shadow-sm"
+                         @click="setActiveCell(index)"
+                         :style="{
+                            border: activeIndex === index ? '2px solid #1d4ed8' : '1px solid transparent',
+                            cursor: 'pointer'
+                         }">
+                        <markdown-cell v-if="cell.cell_type === 'markdown'" :source="cell.source"
+                                       :is-active="activeIndex === index"
+                                       :start-edit-key="markdownEditKey[index]"
+                                       @save="(content) => sendMarkdownToServer(content, index)" />
+
+                        <div v-if="cell.cell_type === 'code'">
+                            <div v-if="cell.metadata?.explanation" class="has-background-light p-0 border-bottom">
+                                <explanation-editor v-model:source="cell.metadata.explanation" :isActive="activeIndex === index" 
+                                                    :index="index" :asRead="asRead" :lastRunIndex="lastRunIndex"
+                                                    :start-edit-key="explanationEditKey[index]"
+                                @save="(content) => sendExplanationToServer(content, index)" 
+                                @redo="() => sendRedoToServer(index)" 
+                                @run="() => runCell(index)" />
+                            </div>
+                            <code-cell v-model:source="cell.source" :execution-count="cell.execution_count" @save="(content) => sendCodeToServer(content, index)" />
+                            
+                            <div v-if="cell.outputs?.length" class="p-2 border-top has-background-white">
+                                <output-renderer v-for="(out, oIdx) in cell.outputs" :key="oIdx" :output="out" />
+                            </div>
                         </div>
-                        <code-cell v-model:source="cell.source" :execution-count="cell.execution_count" @save="(content) => sendCodeToServer(content, index)" />
-                        
-                        <div v-if="cell.outputs?.length" class="p-2 border-top has-background-white">
-                            <output-renderer v-for="(out, oIdx) in cell.outputs" :key="oIdx" :output="out" />
-                        </div>
+                    </div>
+
+                    <div v-if="activeIndex === index" class="pb-1" style="display:flex; justify-content:center; gap:0.5rem;">
+                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index, 'markdown')">Insert Comment</button>
+                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index, 'code')">Insert Action</button>
                     </div>
                 </div>
             </div>

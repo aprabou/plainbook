@@ -1,12 +1,88 @@
 
+import { ref, watch, nextTick } from './vue.esm-browser.js';
+
 const MarkdownCell = {
-    props: ['source'],
-    setup(props) {
+    props: ['source', 'startEditKey', 'isActive'],
+    emits: ['save'],
+    setup(props, { emit }) {
         const md = new markdownit({ html: true });
-        const content = Array.isArray(props.source) ? props.source.join('') : props.source;
-        return { rendered: md.render(content) };
+        const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source || '');
+        const isEditing = ref(false);
+        const textareaEl = ref(null);
+
+        const renderContent = () => md.render(localSource.value);
+        const rendered = ref(renderContent());
+
+        const refresh = () => {
+            rendered.value = renderContent();
+        };
+
+        watch(() => props.source, (val) => {
+            localSource.value = Array.isArray(val) ? val.join('') : val || '';
+            refresh();
+        });
+
+        watch(() => props.startEditKey, () => {
+            isEditing.value = true;
+            nextTick(() => { 
+                autoResize();
+                if (textareaEl.value) textareaEl.value.focus(); 
+            });
+        });
+
+        watch(isEditing, (newVal) => {
+            if (newVal) {
+                nextTick(() => {
+                    autoResize();
+                    if (textareaEl.value) textareaEl.value.focus();
+                });
+            }
+        });
+
+        const autoResize = () => {
+            const el = textareaEl.value;
+            if (!el) return;
+            el.style.boxSizing = 'border-box';
+            el.style.overflow = 'hidden';
+            el.style.resize = 'none';
+            el.style.height = 'auto';
+            const minHeight = 24; // approximately one line in pixels
+            el.style.height = `${Math.max(el.scrollHeight, minHeight)}px`;
+        };
+
+        const save = () => {
+            isEditing.value = false;
+            emit('save', localSource.value);
+            refresh();
+        };
+
+        return { localSource, rendered, isEditing, textareaEl, save, autoResize };
     },
-    template: /* html */ `<div class="markdown-body content p-2" v-html="rendered"></div>`
+    template: /* html */ `
+        <div class="markdown-body content p-2" style="position: relative; min-height: 2.5rem;">
+            <div v-if="!isEditing" v-html="rendered"></div>
+            <div v-if="!isEditing && isActive" 
+                 style="position: absolute; bottom: 0.1rem; right: 0.5rem; background: rgba(255, 255, 255, 0.85); display:flex; gap: 0.25rem; border-radius: 4px; padding: 0.25rem;">
+                <button class="button is-small is-info py-1 " @click.stop="isEditing = true">Edit</button>
+                <button class="button is-small is-success py-1 " title="Move Up" aria-label="Move Up"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
+                <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
+                <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete"><span class="icon"><i class="fa fa-trash"></i></span></button>
+            </div>
+            <div v-if="isEditing">
+                <textarea
+                    ref="textareaEl"
+                    class="textarea is-family-monospace is-size-6"
+                    v-model="localSource"
+                    rows="1"
+                    style="overflow: hidden; resize: none; height: 0;"
+                    @input="autoResize"
+                ></textarea>
+                <div class="mt-2" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button class="button is-small" @click="isEditing = false">Cancel</button>
+                    <button class="button is-small is-primary" @click="save">Save</button>
+                </div>
+            </div>
+        </div>`
 };
 
 export default MarkdownCell;

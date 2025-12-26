@@ -1,7 +1,7 @@
 import { ref, computed, watch, nextTick } from './vue.esm-browser.js';
 
 const ExplanationRenderer = {
-    props: ['source', 'isActive', 'index', 'lastRunIndex', 'asRead'],
+    props: ['source', 'isActive', 'index', 'lastRunIndex', 'asRead', 'startEditKey'],
     emits: ['update:source', 'save', 'redo', 'run'],
     setup(props, { emit }) {
         const isEditing = ref(false);
@@ -41,6 +41,10 @@ const ExplanationRenderer = {
             });
         };
 
+        watch(() => props.startEditKey, () => {
+            enterEditMode();
+        });
+
         const saveChanges = () => {
             isEditing.value = false; // emit handled by watch
             emit('save', localSource.value);
@@ -74,22 +78,25 @@ const ExplanationRenderer = {
                     <span v-else>Up to date</span>
                 </button>
             </div>
-            <div class="toolbar-right" style="display: flex; gap: 0.5rem;">
-                <button class="button is-small is-info" style="opacity: 0.6;" @click="enterEditMode">
+            <div class="toolbar-right" style="display: flex; gap: 0.25rem;">
+                <button class="button is-small is-info" @click="enterEditMode">
                     Edit
                 </button>
-                <button class="button is-small is-warning" style="opacity: 0.6;" @click="handleRedo">
+                <button class="button is-small is-warning" @click="handleRedo">
                     Regenerate Code
                 </button>
-                <button v-if="index === lastRunIndex" class="button is-small is-success" style="opacity: 0.6;" @click="runCell">
+                <button v-if="index === lastRunIndex" class="button is-small is-primary" @click="runCell">
                     Re-Run
                 </button>
-                <button v-else-if="lastRunIndex < index" class="button is-small is-success" style="opacity: 0.6;" @click="runCell">
+                <button v-else-if="lastRunIndex < index" class="button is-small is-primary" @click="runCell">
                     Run Up To Here
                 </button>
-                <button v-else class="button is-small is-success" style="opacity: 0.6;" @click="runCell">
+                <button v-else class="button is-small is-primary" @click="runCell">
                     Run From Start To Here
                 </button>
+                <button class="button is-small is-success py-1 " title="Move Up" aria-label="Move Up"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
+                <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
+                <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete"><span class="icon"><i class="fa fa-trash"></i></span></button>
             </div>
 
             <div v-if="isEditing" class="explanation-edit-mode">

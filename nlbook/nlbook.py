@@ -137,6 +137,22 @@ class NLBook(object):
     def get_json(self):
         """Returns the JSON representation of the entire notebook."""
         return self.nb
+
+    def insert_cell(self, index, cell_type):
+        """Insert a new cell at index with given type ('markdown' or 'code'). Returns the cell json."""
+        if cell_type not in ('markdown', 'code'):
+            raise ValueError("cell_type must be 'markdown' or 'code'")
+        if index < 0:
+            index = 0
+        if index > len(self.nb.cells):
+            index = len(self.nb.cells)
+        if cell_type == 'markdown':
+            new_cell = nbformat.v4.new_markdown_cell(source="")
+        else:
+            new_cell = nbformat.v4.new_code_cell(source="", execution_count=None, outputs=[])
+            new_cell.metadata['explanation'] = ["Write the explanation here.\n"]
+        self.nb.cells.insert(index, new_cell)
+        return new_cell, index
         
     def _shutdown(self):
             """Cleanly shuts down the kernel and closes channels."""

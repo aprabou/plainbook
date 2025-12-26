@@ -102,6 +102,30 @@ def edit_code():
     print(f"Updated code for cell {cell_index}: {source}")
     return dict(status='success')
 
+@post('/edit_markdown')
+@require_token
+def edit_markdown():
+    data = request.json
+    cell_index = data.get('cell_index')
+    source = data.get('source')
+    try:
+        notebook.nb.cells[cell_index].source = source
+    except Exception as e:
+        return dict(status='error', message=str(e))
+    return dict(status='success')
+
+@post('/insert_cell')
+@require_token
+def insert_cell():
+    data = request.json
+    cell_type = data.get('cell_type')
+    index = data.get('index')
+    try:
+        new_cell, idx = notebook.insert_cell(index, cell_type)
+        return dict(status='success', cell=new_cell, index=idx)
+    except Exception as e:
+        return dict(status='error', message=str(e))
+
 @get('/last_valid_cell')
 @require_token
 def last_valid_cell():

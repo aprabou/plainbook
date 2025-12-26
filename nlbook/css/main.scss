@@ -1,6 +1,10 @@
 // 3. Load the rest of Bulma
 @use "bulma/sass" with (
-  $primary: #3273dc,
+  $primary: #3257dc,
+  $info: #128ddf,
+  $warning: #b56c06,
+  $success: #0d903b,
+  $danger: #bf1f13,
   $pre-padding: 0.5rem,
   $control-size: 0.85rem,
   $body-line-height: 1.5,

@@ -17,6 +17,8 @@ createApp({
         const loading = ref(true);
         const error = ref(null);
         const activeIndex = ref(-1);
+        const markdownEditKey = ref({});
+        const explanationEditKey = ref({});
 
         // For running a notebook.
         const running = ref(false);
@@ -46,6 +48,10 @@ createApp({
                 loading.value = false;
                 asRead.value = true;
             }
+        };
+
+        const bumpKey = (dictRef, idx) => {
+            dictRef.value = { ...dictRef.value, [idx]: (dictRef.value[idx] || 0) + 1 };
         };
 
         const sendExplanationToServer = async (content, cellIndex) => {
@@ -82,6 +88,26 @@ createApp({
             }
         };
 
+        const sendMarkdownToServer = async (content, cellIndex) => {
+            asRead.value = false;
+            try {
+                const response = await fetch(`/edit_markdown?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        cell_index: cellIndex, 
+                        source: content })
+                });
+                if (!response.ok) throw new Error('Failed to save markdown');
+                console.log('Markdown saved:', cellIndex);
+                if (notebook.value && notebook.value.cells[cellIndex]) {
+                    notebook.value.cells[cellIndex].source = content;
+                }
+            } catch (err) {
+                console.error('Save markdown error:', err);
+            }
+        };
+
         const setActiveCell = (idx, shouldScroll = false) => { 
             activeIndex.value = idx; 
             if (shouldScroll) {
@@ -91,6 +117,32 @@ createApp({
                         cells[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 });
+            }
+        };
+
+        const insertCell = async (insertAfter, cellType) => {
+            const position = insertAfter + 1;
+            try {
+                const response = await fetch(`/insert_cell?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cell_type: cellType, index: position })
+                });
+                if (!response.ok) throw new Error('Failed to insert cell');
+                const r = await response.json();
+                if (r.status !== 'success') throw new Error(r.message || 'Insert failed');
+                const { cell, index } = r;
+                if (notebook.value) {
+                    notebook.value.cells.splice(index, 0, cell);
+                    activeIndex.value = index;
+                    if (cellType === 'markdown') {
+                        bumpKey(markdownEditKey, index);
+                    } else {
+                        bumpKey(explanationEditKey, index);
+                    }
+                }
+            } catch (err) {
+                console.error('Insert cell error:', err);
             }
         };
 
@@ -230,9 +282,9 @@ createApp({
             window.removeEventListener('keydown', handleKeydown);
         });
 
-        return { notebook, loading, error, sendExplanationToServer, sendCodeToServer, activeIndex, 
+        return { notebook, loading, error, sendExplanationToServer, sendCodeToServer, sendMarkdownToServer, activeIndex, 
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
-            interruptKernel, showSettings, openSettings, closeSettings };
+            interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, explanationEditKey };
     },
 template: `#app-template`,
 }).mount('#app');
