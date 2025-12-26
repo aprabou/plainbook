@@ -113,7 +113,7 @@ createApp({
         const runAllCells = async () => {
             if (!running.value) {
                 running.value = true;
-                for (let i = lastRunIndex.value + 1; i < notebook.value.cells.length; i++) {
+                for (let i = lastRunIndex.value + 1; i < notebook.value.cells.length && running.value; i++) {
                     await runOneCell(i);
                 }
                 running.value = false;

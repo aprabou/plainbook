@@ -72,9 +72,8 @@ class NLBook(object):
     def execute_cell(self, index):
         """Executes a code cell by index and returns the output."""
         with self._lock:
-            print(f"Executing cell {index} with last executed cell {self.last_executed_cell}...")
             if index < 0 or index >= len(self.nb.cells):
-                raise IndexError("Cell index out of range")
+                raise ExecutionError("Cell index out of range")
             cell = self.nb.cells[index]
             if cell.cell_type != 'code':
                 return None, "Not a code cell"
@@ -82,15 +81,12 @@ class NLBook(object):
                 return cell.outputs, "Cached"
             if index > self.last_executed_cell + 1:
                 raise ExecutionError("Cannot execute cell out of order")
-            try:
-                # For some reason, the client may have forgotten the kernel client
-                # due to threading. 
-                self._heal_client()
-                self.client.execute_cell(cell, index)
-                self.last_executed_cell = index
-                return cell.outputs, 'ok'
-            except CellExecutionError as e:
-                raise ExecutionError(f"Error executing cell {index}: {str(e)}")
+            # For some reason, the client may have forgotten the kernel client
+            # due to threading. 
+            self._heal_client()
+            self.client.execute_cell(cell, index)
+            self.last_executed_cell = index
+            return cell.outputs, 'ok'
             
     def reset_kernel(self):
         """Resets the kernel."""

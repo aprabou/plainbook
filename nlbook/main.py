@@ -3,6 +3,7 @@ import argparse
 import asyncio
 from functools import wraps
 import json
+from nbclient.exceptions import CellExecutionError
 import os
 from pathlib import Path
 import secrets
@@ -116,6 +117,10 @@ def execute_cell():
     try:
         outputs, details = notebook.execute_cell(cell_index)
         return dict(status="ok", details=details, outputs=outputs)
+    except CellExecutionError as e:
+        # The execution error is already captured in the cell outputs. 
+        return dict(status="ok", details="CellExecutionError", 
+                    outputs=notebook.nb.cells[cell_index].get('outputs', []))
     except ExecutionError as e:
         return dict(status='error', message=str(e))
 
