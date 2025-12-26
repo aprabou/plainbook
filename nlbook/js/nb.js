@@ -146,6 +146,54 @@ createApp({
             }
         };
 
+        const deleteCell = async (cellIndex) => {
+            try {
+                const response = await fetch(`/delete_cell?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cell_index: cellIndex })
+                });
+                if (!response.ok) throw new Error('Failed to delete cell');
+                const r = await response.json();
+                if (r.status !== 'success') throw new Error(r.message || 'Delete failed');
+                if (notebook.value) {
+                    notebook.value.cells.splice(cellIndex, 1);
+                    // Adjust active index
+                    const total = notebook.value.cells.length;
+                    if (total === 0) {
+                        activeIndex.value = -1;
+                    } else if (activeIndex.value >= total) {
+                        activeIndex.value = total - 1;
+                    }
+                }
+            } catch (err) {
+                console.error('Delete cell error:', err);
+            }
+        };
+
+        const moveCell = async (cellIndex, direction) => {
+            const newIndex = cellIndex + direction;
+            const total = notebook.value?.cells?.length ?? 0;
+            if (newIndex < 0 || newIndex >= total) return;
+            try {
+                const response = await fetch(`/move_cell?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cell_index: cellIndex, new_index: newIndex })
+                });
+                if (!response.ok) throw new Error('Failed to move cell');
+                const r = await response.json();
+                if (r.status !== 'success') throw new Error(r.message || 'Move failed');
+                if (notebook.value) {
+                    const [cell] = notebook.value.cells.splice(cellIndex, 1);
+                    notebook.value.cells.splice(newIndex, 0, cell);
+                    activeIndex.value = newIndex;
+                }
+            } catch (err) {
+                console.error('Move cell error:', err);
+            }
+        };
+
         const isEditingField = (el) => {
             if (!el) return false;
             const tag = el.tagName;
@@ -284,7 +332,8 @@ createApp({
 
         return { notebook, loading, error, sendExplanationToServer, sendCodeToServer, sendMarkdownToServer, activeIndex, 
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
-            interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, explanationEditKey };
+            interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, explanationEditKey,
+            deleteCell, moveCell };
     },
 template: `#app-template`,
 }).mount('#app');

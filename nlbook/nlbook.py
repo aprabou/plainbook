@@ -153,6 +153,30 @@ class NLBook(object):
             new_cell.metadata['explanation'] = ["Write the explanation here.\n"]
         self.nb.cells.insert(index, new_cell)
         return new_cell, index
+    
+    def delete_cell(self, index):
+        """Delete the cell at the given index."""
+        if index < 0 or index >= len(self.nb.cells):
+            raise IndexError("Cell index out of range")
+        del self.nb.cells[index]
+        # Optionally adjust last_executed_cell
+        if hasattr(self, 'last_executed_cell') and self.last_executed_cell is not None:
+            if self.last_executed_cell > index:
+                self.last_executed_cell -= 1
+            elif self.last_executed_cell == index:
+                self.last_executed_cell = index - 1
+
+    def move_cell(self, index, new_index):
+        """Move a cell from index to new_index."""
+        n = len(self.nb.cells)
+        if index < 0 or index >= n:
+            raise IndexError("Cell index out of range")
+        if new_index < 0:
+            new_index = 0
+        if new_index >= n:
+            new_index = n - 1
+        cell = self.nb.cells.pop(index)
+        self.nb.cells.insert(new_index, cell)
         
     def _shutdown(self):
             """Cleanly shuts down the kernel and closes channels."""

@@ -126,6 +126,29 @@ def insert_cell():
     except Exception as e:
         return dict(status='error', message=str(e))
 
+@post('/delete_cell')
+@require_token
+def delete_cell():
+    data = request.json
+    cell_index = data.get('cell_index')
+    try:
+        notebook.delete_cell(cell_index)
+        return dict(status='success')
+    except Exception as e:
+        return dict(status='error', message=str(e))
+
+@post('/move_cell')
+@require_token
+def move_cell():
+    data = request.json
+    cell_index = data.get('cell_index')
+    new_index = data.get('new_index')
+    try:
+        notebook.move_cell(cell_index, new_index)
+        return dict(status='success')
+    except Exception as e:
+        return dict(status='error', message=str(e))
+
 @get('/last_valid_cell')
 @require_token
 def last_valid_cell():

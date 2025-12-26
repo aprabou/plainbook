@@ -3,7 +3,7 @@ import { ref, watch, nextTick } from './vue.esm-browser.js';
 
 const MarkdownCell = {
     props: ['source', 'startEditKey', 'isActive'],
-    emits: ['save'],
+    emits: ['save', 'delete', 'moveUp', 'moveDown'],
     setup(props, { emit }) {
         const md = new markdownit({ html: true });
         const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source || '');
@@ -64,9 +64,9 @@ const MarkdownCell = {
             <div v-if="!isEditing && isActive" 
                  style="position: absolute; bottom: 0.1rem; right: 0.5rem; background: rgba(255, 255, 255, 0.85); display:flex; gap: 0.25rem; border-radius: 4px; padding: 0.25rem;">
                 <button class="button is-small is-info py-1 " @click.stop="isEditing = true">Edit</button>
-                <button class="button is-small is-success py-1 " title="Move Up" aria-label="Move Up"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
-                <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
-                <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete"><span class="icon"><i class="fa fa-trash"></i></span></button>
+                <button class="button is-small is-success py-1 " title="Move Up" aria-label="Move Up" @click.stop="$emit('moveUp')"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
+                <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down" @click.stop="$emit('moveDown')"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
+                <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete" @click.stop="$emit('delete')"><span class="icon"><i class="fa fa-trash"></i></span></button>
             </div>
             <div v-if="isEditing">
                 <textarea

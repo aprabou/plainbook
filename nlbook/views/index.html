@@ -77,8 +77,8 @@
             <div v-else="notebook">
                 <div v-for="(cell, index) in notebook.cells" :key="index">
                     <div v-if="activeIndex === index" class="py-1" style="display:flex; justify-content:center; gap:0.5rem;">
-                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index - 1, 'markdown')">Insert Comment</button>
-                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index - 1, 'code')">Insert Action</button>
+                        <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(index - 1, 'markdown')">Insert Comment</button>
+                        <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(index - 1, 'code')">Insert Action</button>
                     </div>
 
                     <div class="notebook-cell box p-0 mb-2 is-clipped shadow-sm"
@@ -90,7 +90,11 @@
                         <markdown-cell v-if="cell.cell_type === 'markdown'" :source="cell.source"
                                        :is-active="activeIndex === index"
                                        :start-edit-key="markdownEditKey[index]"
-                                       @save="(content) => sendMarkdownToServer(content, index)" />
+                                       @save="(content) => sendMarkdownToServer(content, index)"
+                                       :index="index"
+                                       @delete="deleteCell(index)"
+                                       @moveUp="moveCell(index, -1)"
+                                       @moveDown="moveCell(index, 1)" />
 
                         <div v-if="cell.cell_type === 'code'">
                             <div v-if="cell.metadata?.explanation" class="has-background-light p-0 border-bottom">
@@ -99,7 +103,10 @@
                                                     :start-edit-key="explanationEditKey[index]"
                                 @save="(content) => sendExplanationToServer(content, index)" 
                                 @redo="() => sendRedoToServer(index)" 
-                                @run="() => runCell(index)" />
+                                @run="() => runCell(index)"
+                                @delete="deleteCell(index)"
+                                @moveUp="moveCell(index, -1)"
+                                @moveDown="moveCell(index, 1)" />
                             </div>
                             <code-cell v-model:source="cell.source" :execution-count="cell.execution_count" @save="(content) => sendCodeToServer(content, index)" />
                             
@@ -110,8 +117,8 @@
                     </div>
 
                     <div v-if="activeIndex === index" class="pb-1" style="display:flex; justify-content:center; gap:0.5rem;">
-                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index, 'markdown')">Insert Comment</button>
-                        <button class="button insert-cell is-small py-0 px-3" @click.stop="insertCell(index, 'code')">Insert Action</button>
+                        <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(index, 'markdown')">Insert Comment</button>
+                        <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(index, 'code')">Insert Action</button>
                     </div>
                 </div>
             </div>
