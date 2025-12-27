@@ -64,6 +64,7 @@
             </div>
         </div>
     </nav>
+
     <div class="section">
         <div class="notebook-container px-2 py-2">
             <div v-if="loading" class="has-text-centered py-6">
@@ -75,6 +76,10 @@
                 <strong>Error:</strong> {{ error }}
             </div>
             <div v-else="notebook">
+                <div v-if="notebook.cells.length === 0" class="py-1" style="display:flex; justify-content:center; gap:0.5rem;">
+                    <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(0, 'markdown')">Insert Comment</button>
+                    <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(0, 'code')">Insert Action</button>
+                </div>
                 <div v-for="(cell, index) in notebook.cells" :key="index">
                     <div v-if="activeIndex === index" class="py-1" style="display:flex; justify-content:center; gap:0.5rem;">
                         <button class="button insert-cell is-success is-small py-0 px-3" @click.stop="insertCell(index - 1, 'markdown')">Insert Comment</button>

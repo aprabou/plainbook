@@ -6,6 +6,7 @@ const ExplanationRenderer = {
     setup(props, { emit }) {
         const isEditing = ref(false);
         const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source);
+        const originalSource = ref(localSource.value);
         const md = new markdownit({ html: true });
         const textareaEl = ref(null);
 
@@ -34,6 +35,7 @@ const ExplanationRenderer = {
         });
 
         const enterEditMode = () => {
+            originalSource.value = localSource.value;
             isEditing.value = true;
             nextTick(() => {
                 autoResize();
@@ -50,6 +52,11 @@ const ExplanationRenderer = {
             emit('save', localSource.value);
         };
 
+        const cancelEdit = () => {
+            localSource.value = originalSource.value;
+            isEditing.value = false;
+        };
+
         const handleRedo = () => {
             emit('redo');
         };
@@ -58,7 +65,7 @@ const ExplanationRenderer = {
             emit('run');
         }
 
-        return { isEditing, localSource, rendered, enterEditMode, saveChanges, textareaEl, autoResize, 
+        return { isEditing, localSource, rendered, enterEditMode, saveChanges, cancelEdit, textareaEl, autoResize, 
             handleRedo, runCell };
     },
     template: /* html */ `
@@ -98,17 +105,22 @@ const ExplanationRenderer = {
                     <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down" @click.stop="$emit('moveDown')"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
                     <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete" @click.stop="$emit('delete')"><span class="icon"><i class="fa fa-trash"></i></span></button>
             </div>
+        </div>
 
-            <div v-if="isEditing" class="explanation-edit-mode">
-                <textarea 
-                    ref="textareaEl"
-                    v-model="localSource" 
-                    class="textarea is-family-monospace mb-2" 
-                    rows="1"
-                    style="overflow: hidden; resize: none; height: 0;"
-                    @input="autoResize"
-                    @keydown.enter.shift.prevent="saveChanges">
-                </textarea>
+        <div v-if="isEditing" class="explanation-edit-mode px-2 pb-2">
+            <textarea 
+                ref="textareaEl"
+                v-model="localSource" 
+                class="textarea is-family-monospace mb-2" 
+                rows="1"
+                style="overflow: hidden; resize: none; height: 0;"
+                @input="autoResize"
+                @keydown.enter.shift.prevent="saveChanges">
+            </textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button class="button is-small" @click="cancelEdit">
+                    Cancel
+                </button>
                 <button class="button is-small is-primary" @click="saveChanges">
                     Save
                 </button>
