@@ -41,6 +41,7 @@ createApp({
                 const r = await response.json();
                 notebook.value = r.nb;
                 notebook_name.value = r.nb_name;
+                lastRunIndex.value = r.last_executed_cell || -1;
             } catch (err) {
                 error.value = err.message;
                 console.error("Fetch error:", err);
@@ -49,6 +50,10 @@ createApp({
                 asRead.value = true;
             }
         };
+
+        const reloadNotebook = async () => {
+            await fetchNotebook();
+        }
 
         const bumpKey = (dictRef, idx) => {
             dictRef.value = { ...dictRef.value, [idx]: (dictRef.value[idx] || 0) + 1 };
@@ -66,6 +71,8 @@ createApp({
                 });
                 if (!response.ok) throw new Error('Failed to save');
                 console.log('Explanation saved:', cellIndex);
+                const r = await response.json();
+                lastRunIndex.value = r.last_executed_cell;
             } catch (err) {
                 console.error('Save error:', err);
             }
@@ -83,6 +90,8 @@ createApp({
                 });
                 if (!response.ok) throw new Error('Failed to save');
                 console.log('Code saved:', cellIndex);
+                const r = await response.json();
+                lastRunIndex.value = r.last_executed_cell;
             } catch (err) {
                 console.error('Save error:', err);
             }
@@ -100,6 +109,8 @@ createApp({
                 });
                 if (!response.ok) throw new Error('Failed to save markdown');
                 console.log('Markdown saved:', cellIndex);
+                const r = await response.json();
+                lastRunIndex.value = r.last_executed_cell;
                 if (notebook.value && notebook.value.cells[cellIndex]) {
                     notebook.value.cells[cellIndex].source = content;
                 }
@@ -130,6 +141,7 @@ createApp({
                 });
                 if (!response.ok) throw new Error('Failed to insert cell');
                 const r = await response.json();
+                lastRunIndex.value = r.last_executed_cell;
                 if (r.status !== 'success') throw new Error(r.message || 'Insert failed');
                 const { cell, index } = r;
                 if (notebook.value) {
@@ -155,6 +167,7 @@ createApp({
                 });
                 if (!response.ok) throw new Error('Failed to delete cell');
                 const r = await response.json();
+                lastRunIndex.value = r.last_executed_cell;
                 if (r.status !== 'success') throw new Error(r.message || 'Delete failed');
                 if (notebook.value) {
                     notebook.value.cells.splice(cellIndex, 1);
@@ -183,6 +196,7 @@ createApp({
                 });
                 if (!response.ok) throw new Error('Failed to move cell');
                 const r = await response.json();
+                lastRunIndex.value = r.last_executed_cell;
                 if (r.status !== 'success') throw new Error(r.message || 'Move failed');
                 if (notebook.value) {
                     const [cell] = notebook.value.cells.splice(cellIndex, 1);
@@ -215,7 +229,7 @@ createApp({
                     }
                     lastRunIndex.value = cellIndex;
                 } else {
-                    // We run f
+                    // We run from the last run cell to the current one. 
                     for (let i = lastRunIndex.value + 1; i <= cellIndex; i++) {
                         await runOneCell(i);
                     }
@@ -255,6 +269,10 @@ createApp({
                     // Update outputs in the notebook model
                     if (notebook.value && notebook.value.cells[cellIndex]) {
                         notebook.value.cells[cellIndex].outputs = r.outputs;
+                    }
+                    // Update lastRunIndex from server response
+                    if (r.last_executed_cell !== undefined && r.last_executed_cell !== null) {
+                        lastRunIndex.value = r.last_executed_cell;
                     }
                 }
             } catch (err) {

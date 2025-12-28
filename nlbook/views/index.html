@@ -49,6 +49,11 @@
                             <span class="icon"><i class="fa fa-stop"></i></span>
                             <span>Running...</span>
                         </button>
+                        <button v-if="!running && notebook"
+                            @click="reloadNotebook"
+                            class="button is-warning">
+                            <span class="icon"><i class="fa fa-refresh"></i></span>
+                            <span>Refresh</span>
                     </div>
                 </div>
             </div>

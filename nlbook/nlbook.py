@@ -50,6 +50,23 @@ class NLBook(object):
                         " * It might be even interesting to understand\n",
                     ]
                     cell.metadata['explanation'] = explanation
+            self.last_executed_cell = self.nb.metadata.get('last_executed_cell', -1)
+                    
+    def _write(self):
+        self.nb.metadata['last_executed_cell'] = self.last_executed_cell
+        pass # For now, we do not write back to disk.
+    
+    def get_cell_json(self, index):
+        """Returns the JSON representation of a cell by index."""
+        if index < 0 or index >= len(self.nb.cells):
+            raise IndexError("Cell index out of range")
+        return self.nb.cells[index]
+    
+    def get_json(self):
+        """Returns the JSON representation of the entire notebook."""
+        return self.nb
+    
+    # Execution-related methods
                     
     def _heal_client(self):
         # 1. Ensure the NotebookClient has the KernelClient reference
@@ -86,6 +103,7 @@ class NLBook(object):
             self._heal_client()
             self.client.execute_cell(cell, index)
             self.last_executed_cell = index
+            self._write()
             return cell.outputs, 'ok'
             
     def reset_kernel(self):
@@ -121,63 +139,12 @@ class NLBook(object):
             # 7. Re-initialize the internal async state
             self.client.setup_kernel()
             self.last_executed_cell = -1
-            print("Kernel reset successfully.")
             
     def interrupt_kernel(self):
         if self.km and self.km.is_alive():
             print("Interrupting kernel...")
             self.km.interrupt_kernel()
                         
-    def get_cell_json(self, index):
-        """Returns the JSON representation of a cell by index."""
-        if index < 0 or index >= len(self.nb.cells):
-            raise IndexError("Cell index out of range")
-        return self.nb.cells[index]
-    
-    def get_json(self):
-        """Returns the JSON representation of the entire notebook."""
-        return self.nb
-
-    def insert_cell(self, index, cell_type):
-        """Insert a new cell at index with given type ('markdown' or 'code'). Returns the cell json."""
-        if cell_type not in ('markdown', 'code'):
-            raise ValueError("cell_type must be 'markdown' or 'code'")
-        if index < 0:
-            index = 0
-        if index > len(self.nb.cells):
-            index = len(self.nb.cells)
-        if cell_type == 'markdown':
-            new_cell = nbformat.v4.new_markdown_cell(source="")
-        else:
-            new_cell = nbformat.v4.new_code_cell(source="", execution_count=None, outputs=[])
-            new_cell.metadata['explanation'] = ["Write the explanation here.\n"]
-        self.nb.cells.insert(index, new_cell)
-        return new_cell, index
-    
-    def delete_cell(self, index):
-        """Delete the cell at the given index."""
-        if index < 0 or index >= len(self.nb.cells):
-            raise IndexError("Cell index out of range")
-        del self.nb.cells[index]
-        # Optionally adjust last_executed_cell
-        if hasattr(self, 'last_executed_cell') and self.last_executed_cell is not None:
-            if self.last_executed_cell > index:
-                self.last_executed_cell -= 1
-            elif self.last_executed_cell == index:
-                self.last_executed_cell = index - 1
-
-    def move_cell(self, index, new_index):
-        """Move a cell from index to new_index."""
-        n = len(self.nb.cells)
-        if index < 0 or index >= n:
-            raise IndexError("Cell index out of range")
-        if new_index < 0:
-            new_index = 0
-        if new_index >= n:
-            new_index = n - 1
-        cell = self.nb.cells.pop(index)
-        self.nb.cells.insert(new_index, cell)
-        
     def _shutdown(self):
             """Cleanly shuts down the kernel and closes channels."""
             print(f"Shutting down kernel for {self.name}...")
@@ -198,3 +165,76 @@ class NLBook(object):
             except RuntimeError:
                 # Loop already closed or doesn't exist
                 pass
+
+    # Cell insertion, deletion, and movement methods
+
+    def insert_cell(self, index, cell_type):
+        """Insert a new cell at index with given type ('markdown' or 'code'). Returns the cell json."""
+        with self._lock:
+            assert cell_type in ('markdown', 'code')
+            assert 0 <= index <= len(self.nb.cells)
+            if cell_type == 'markdown':
+                new_cell = nbformat.v4.new_markdown_cell(source="")
+            else:
+                new_cell = nbformat.v4.new_code_cell(source="", execution_count=None, outputs=[])
+                new_cell.metadata['explanation'] = ["Write the explanation here.\n"]
+            self.nb.cells.insert(index, new_cell)
+            self.last_executed_cell = min(self.last_executed_cell, index - 1)
+            self._write()
+            return new_cell, index
+    
+    def delete_cell(self, index):
+        """Delete the cell at the given index."""
+        with self._lock:
+            if index < 0 or index >= len(self.nb.cells):
+                raise IndexError("Cell index out of range")
+            del self.nb.cells[index]
+            if self.last_executed_cell > index:
+                self.last_executed_cell -= 1
+            elif self.last_executed_cell == index:
+                self.last_executed_cell = index - 1
+            self._write()
+
+    def move_cell(self, index, new_index):
+        """Move a cell from index to new_index."""
+        with self._lock:
+            n = len(self.nb.cells)
+            if index < 0 or index >= n:
+                raise IndexError("Cell index out of range")
+            if new_index < 0:
+                new_index = 0
+            if new_index >= n:
+                new_index = n - 1
+            cell = self.nb.cells.pop(index)
+            self.nb.cells.insert(new_index, cell)
+            if self.last_executed_cell == index:
+                self.last_executed_cell = new_index
+            elif self.last_executed_cell > index and self.last_executed_cell <= new_index:
+                self.last_executed_cell -= 1
+            elif self.last_executed_cell < index and self.last_executed_cell >= new_index:
+                self.last_executed_cell += 1
+            self._write()
+            
+    # Cell editing methods
+    
+    def set_cell_source(self, index, source):
+        """Sets the source code of a cell at the given index."""
+        with self._lock:
+            assert 0 <= index < len(self.nb.cells)
+            self.nb.cells[index].source = source
+            if self.nb.cells[index].cell_type == 'code':
+                # Reset outputs and execution count on code cell edit
+                self.nb.cells[index].outputs = []
+                if index <= self.last_executed_cell:
+                    self.last_executed_cell = index - 1
+            self._write()
+
+    def set_cell_explanation(self, index, explanation):
+        """Sets the explanation of a code cell at the given index."""
+        with self._lock:
+            assert 0 <= index < len(self.nb.cells)
+            cell = self.nb.cells[index]
+            assert cell.cell_type == 'code'
+            cell.metadata['explanation'] = explanation
+            self._write()
+        

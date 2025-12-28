@@ -90,16 +90,16 @@ const ExplanationRenderer = {
                     Edit
                 </button>
                 <button class="button is-small is-warning" @click="handleRedo">
-                    Regenerate Code
+                    <span class="icon"><i class="fa fa-repeat"></i></span> <span>Regenerate Code</span>
                 </button>
                 <button v-if="index === lastRunIndex" class="button is-small is-primary" @click="runCell">
-                    Re-Run
+                    <span class="icon"><i class="fa fa-repeat"></i></span> <span>Re-Run</span>
                 </button>
                 <button v-else-if="lastRunIndex < index" class="button is-small is-primary" @click="runCell">
-                    Run Up To Here
+                    <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run Up To Here</span>
                 </button>
                 <button v-else class="button is-small is-primary" @click="runCell">
-                    Run From Start To Here
+                    <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run From Start To Here</span>
                 </button>
                     <button class="button is-small is-success py-1 " title="Move Up" aria-label="Move Up" @click.stop="$emit('moveUp')"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
                     <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down" @click.stop="$emit('moveDown')"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>

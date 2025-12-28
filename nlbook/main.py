@@ -79,6 +79,7 @@ def get_notebook():
     return dict(
         nb=notebook.get_json(),
         nb_name=os.path.basename(notebook_path),
+        last_executed_cell=notebook.last_executed_cell,
     )
     
 @post('/edit_explanation')
@@ -87,10 +88,9 @@ def edit_explanation():
     data = request.json
     cell_index = data.get('cell_index')
     explanation = data.get('explanation')
-    # Here you would typically save the explanation to a database or file
-    # For this example, we just log it
-    print(f"Updated explanation for cell {cell_index}: {explanation}")
-    return dict(status='success')
+    notebook.set_cell_explanation(cell_index, explanation)
+    return dict(status='success', 
+                last_executed_cell=notebook.last_executed_cell)
 
 @post('/edit_code')
 @require_token
@@ -98,10 +98,9 @@ def edit_code():
     data = request.json
     cell_index = data.get('cell_index')
     source = data.get('source')
-    # Here you would typically save the code to a database or file
-    # For this example, we just log it
-    print(f"Updated code for cell {cell_index}: {source}")
-    return dict(status='success')
+    notebook.set_cell_source(cell_index, source)
+    return dict(status='success', 
+                last_executed_cell=notebook.last_executed_cell)
 
 @post('/edit_markdown')
 @require_token
@@ -109,11 +108,9 @@ def edit_markdown():
     data = request.json
     cell_index = data.get('cell_index')
     source = data.get('source')
-    try:
-        notebook.nb.cells[cell_index].source = source
-    except Exception as e:
-        return dict(status='error', message=str(e))
-    return dict(status='success')
+    notebook.set_cell_source(cell_index, source)
+    return dict(status='success', 
+                last_executed_cell=notebook.last_executed_cell)
 
 @post('/insert_cell')
 @require_token
@@ -121,22 +118,18 @@ def insert_cell():
     data = request.json
     cell_type = data.get('cell_type')
     index = data.get('index')
-    try:
-        new_cell, idx = notebook.insert_cell(index, cell_type)
-        return dict(status='success', cell=new_cell, index=idx)
-    except Exception as e:
-        return dict(status='error', message=str(e))
+    new_cell, idx = notebook.insert_cell(index, cell_type)
+    return dict(status='success', cell=new_cell, index=idx, 
+                last_executed_cell=notebook.last_executed_cell)
 
 @post('/delete_cell')
 @require_token
 def delete_cell():
     data = request.json
     cell_index = data.get('cell_index')
-    try:
-        notebook.delete_cell(cell_index)
-        return dict(status='success')
-    except Exception as e:
-        return dict(status='error', message=str(e))
+    notebook.delete_cell(cell_index)
+    return dict(status='success', 
+                last_executed_cell=notebook.last_executed_cell)
 
 @post('/move_cell')
 @require_token
@@ -144,11 +137,9 @@ def move_cell():
     data = request.json
     cell_index = data.get('cell_index')
     new_index = data.get('new_index')
-    try:
-        notebook.move_cell(cell_index, new_index)
-        return dict(status='success')
-    except Exception as e:
-        return dict(status='error', message=str(e))
+    notebook.move_cell(cell_index, new_index)
+    return dict(status='success', 
+                last_executed_cell=notebook.last_executed_cell)
 
 @get('/last_valid_cell')
 @require_token
@@ -164,11 +155,12 @@ def execute_cell():
     print(f"Executing cell {cell_index}")
     try:
         outputs, details = notebook.execute_cell(cell_index)
-        return dict(status="ok", details=details, outputs=outputs)
+        return dict(status="ok", details=details, outputs=outputs, last_executed_cell=notebook.last_executed_cell)
     except CellExecutionError as e:
         # The execution error is already captured in the cell outputs. 
         return dict(status="ok", details="CellExecutionError", 
-                    outputs=notebook.nb.cells[cell_index].get('outputs', []))
+                    outputs=notebook.nb.cells[cell_index].get('outputs', []),
+                    last_executed_cell=notebook.last_executed_cell)
     except ExecutionError as e:
         return dict(status='error', message=str(e))
 
