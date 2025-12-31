@@ -1,6 +1,9 @@
 bottle
 cherrypy
+google-generativeai
 ipykernel
 jupyter_client
 nbclient
 nbformat
+pyyaml
+

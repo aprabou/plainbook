@@ -54,6 +54,7 @@
                             class="button is-warning">
                             <span class="icon"><i class="fa fa-refresh"></i></span>
                             <span>Refresh</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -61,7 +62,7 @@
                 <div class="navbar-item">
                     <div class="buttons">
                         <button id="btn-settings" class="button is-info" @click="openSettings">
-                            <span class="icon"><i class="fa fa-cog"></i></span>
+                            <span class="icon"><i :class="haskey ? 'fa fa-cog' : 'fa fa-warning'"></i></span>
                             <span>Settings</span>
                         </button>
                     </div>

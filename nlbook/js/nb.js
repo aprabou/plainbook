@@ -28,6 +28,7 @@ createApp({
 
         // For settings modal
         const showSettings = ref(false);
+        const haskey = ref(true); // Will be updated from server
 
         // 2. Define the fetch logic
         const fetchNotebook = async () => {
@@ -42,6 +43,7 @@ createApp({
                 notebook.value = r.nb;
                 notebook_name.value = r.nb_name;
                 lastRunIndex.value = r.last_executed_cell || -1;
+                haskey.value = r.haskey !== false;
             } catch (err) {
                 error.value = err.message;
                 console.error("Fetch error:", err);
@@ -349,10 +351,10 @@ createApp({
         });
 
         return { notebook, notebook_name, loading, error, sendExplanationToServer, sendCodeToServer, 
-            sendMarkdownToServer, activeIndex, 
+            sendMarkdownToServer, activeIndex, reloadNotebook,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, 
-            explanationEditKey, deleteCell, moveCell };
+            explanationEditKey, deleteCell, moveCell, haskey };
     },
 template: `#app-template`,
 }).mount('#app');

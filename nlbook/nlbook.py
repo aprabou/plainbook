@@ -237,4 +237,29 @@ class NLBook(object):
             assert cell.cell_type == 'code'
             cell.metadata['explanation'] = explanation
             self._write()
+            
+    # Methods to support AI
+    
+    def _get_cell_for_ai(self, index):
+        """Returns the JSON of a cell for AI processing.
+        Needs to be called with the lock held."""
+        cell = self.nb.cells[index]
+        if cell.cell_type == 'code':
+            explanation = cell.metadata.get('explanation', [])
+            explanation_text = "\n# ".join(explanation) + "\n"
+            code_text = "\n".join(cell.source)
+            return explanation_text + code_text
+        elif cell.cell_type == 'markdown':
+            return "\n# ".join(cell.source)
+
+    def _get_code_for_ai(self):
+        """Returns the concatenated source code of all code cells for context.
+        Needs to be called with the lock held."""
+        pass
+
+    existing_code = "\n".join([
+        cell['source'] for cell in nb['cells'] 
+        if cell['cell_type'] == 'code'
+    ])
+
         

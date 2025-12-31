@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import secrets
 import socket
+import yaml
 import sys
 import webbrowser
 # Bottle imports
@@ -24,6 +25,18 @@ TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
 app_path = Path(APP_FOLDER)
 PARENT_FOLDER = app_path.parent
 TEST_INPUTS = os.path.join(PARENT_FOLDER, "tests/files")
+
+# Configuration file, the 'Good Citizen' way
+APP_NAME = "myapp"
+CONFIG_DIR = Path.home() / ".config" / APP_NAME
+CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+SETTINGS_FILE = CONFIG_DIR / "settings.yaml"
+
+try:
+    with open(SETTINGS_FILE, 'r') as f:
+        settings = yaml.safe_load(f)
+except FileNotFoundError:
+    settings = {}
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Run the nlbook notebook server')
@@ -80,6 +93,7 @@ def get_notebook():
         nb=notebook.get_json(),
         nb_name=os.path.basename(notebook_path),
         last_executed_cell=notebook.last_executed_cell,
+        haskey=settings.get('gemini_api_key') is not None
     )
     
 @post('/edit_explanation')
