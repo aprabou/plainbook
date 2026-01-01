@@ -62,7 +62,7 @@
                 <div class="navbar-item">
                     <div class="buttons">
                         <button id="btn-settings" class="button is-info" @click="openSettings">
-                            <span class="icon"><i :class="haskey ? 'fa fa-cog' : 'fa fa-warning'"></i></span>
+                            <span class="icon"><i :class="geminiApiKey ? 'fa fa-cog' : 'fa fa-warning'"></i></span>
                             <span>Settings</span>
                         </button>
                     </div>
@@ -146,7 +146,13 @@
                 <button class="delete" aria-label="close" @click="closeSettings"></button>
             </header>
             <section class="modal-card-body">
-                <p class="has-text-grey">Settings will be available here in the future.</p>
+                <div class="field">
+                    <label class="label">Gemini API Key</label>
+                    <div class="control">
+                        <input class="input" type="text" v-model="geminiApiKey" placeholder="Enter your Gemini API key">
+                    </div>
+                    <p class="help">Your API key is stored locally in ~/.settings/nlbook and used for AI-powered features.</p>
+                </div>
             </section>
             <footer class="modal-card-foot">
                 <button class="button" @click="closeSettings">Close</button>

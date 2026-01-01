@@ -93,8 +93,22 @@ def get_notebook():
         nb=notebook.get_json(),
         nb_name=os.path.basename(notebook_path),
         last_executed_cell=notebook.last_executed_cell,
-        haskey=settings.get('gemini_api_key') is not None
+        gemini_api_key=settings.get('gemini_api_key')
     )
+
+@post('/set_key')
+@require_token
+def set_key():
+    data = request.json
+    gemini_api_key = data.get('gemini_api_key', '')
+    settings['gemini_api_key'] = gemini_api_key
+    # Save settings to file
+    try:
+        with open(SETTINGS_FILE, 'w') as f:
+            yaml.dump(settings, f)
+        return dict(status='success')
+    except Exception as e:
+        return dict(status='error', message=str(e))
     
 @post('/edit_explanation')
 @require_token

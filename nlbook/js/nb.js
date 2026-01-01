@@ -1,4 +1,4 @@
-import { createApp, ref, onMounted, onBeforeUnmount, nextTick } from './vue.esm-browser.js';
+import { createApp, ref, onMounted, onBeforeUnmount, nextTick, computed } from './vue.esm-browser.js';
 
 import MarkdownCell from './MarkdownCell.js';
 import OutputRenderer from './OutputRenderer.js';
@@ -28,7 +28,10 @@ createApp({
 
         // For settings modal
         const showSettings = ref(false);
-        const haskey = ref(true); // Will be updated from server
+        const geminiApiKey = ref('');
+        
+        // Computed property to check if API key is set
+        const haskey = computed(() => geminiApiKey.value && geminiApiKey.value.trim().length > 0);
 
         // 2. Define the fetch logic
         const fetchNotebook = async () => {
@@ -43,7 +46,7 @@ createApp({
                 notebook.value = r.nb;
                 notebook_name.value = r.nb_name;
                 lastRunIndex.value = r.last_executed_cell || -1;
-                haskey.value = r.haskey !== false;
+                geminiApiKey.value = r.gemini_api_key || '';
             } catch (err) {
                 error.value = err.message;
                 console.error("Fetch error:", err);
@@ -333,10 +336,27 @@ createApp({
         };
 
         const openSettings = () => {
+            // Get the Gemini API key from the server settings.
+            
             showSettings.value = true;
         };
 
-        const closeSettings = () => {
+        const closeSettings = async () => {
+            // Save the Gemini API key to the server
+            try {
+                const response = await fetch(`/set_key?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gemini_api_key: geminiApiKey.value })
+                });
+                if (response.ok) {
+                    console.log('API key saved successfully');
+                } else {
+                    console.error('Failed to save API key');
+                }
+            } catch (err) {
+                console.error('Error saving API key:', err);
+            }
             showSettings.value = false;
         };
 
@@ -354,7 +374,7 @@ createApp({
             sendMarkdownToServer, activeIndex, reloadNotebook,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, 
-            explanationEditKey, deleteCell, moveCell, haskey };
+            explanationEditKey, deleteCell, moveCell, haskey, geminiApiKey };
     },
 template: `#app-template`,
 }).mount('#app');

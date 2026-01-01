@@ -257,9 +257,5 @@ class NLBook(object):
         Needs to be called with the lock held."""
         pass
 
-    existing_code = "\n".join([
-        cell['source'] for cell in nb['cells'] 
-        if cell['cell_type'] == 'code'
-    ])
 
         
