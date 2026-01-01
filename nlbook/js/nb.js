@@ -1,4 +1,4 @@
-import { createApp, ref, onMounted, onBeforeUnmount, nextTick, computed } from './vue.esm-browser.js';
+import { createApp, ref, onMounted, onBeforeUnmount, nextTick } from './vue.esm-browser.js';
 
 import MarkdownCell from './MarkdownCell.js';
 import OutputRenderer from './OutputRenderer.js';
@@ -29,9 +29,6 @@ createApp({
         // For settings modal
         const showSettings = ref(false);
         const geminiApiKey = ref('');
-        
-        // Computed property to check if API key is set
-        const haskey = computed(() => geminiApiKey.value && geminiApiKey.value.trim().length > 0);
 
         // 2. Define the fetch logic
         const fetchNotebook = async () => {
@@ -374,7 +371,7 @@ createApp({
             sendMarkdownToServer, activeIndex, reloadNotebook,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, 
-            explanationEditKey, deleteCell, moveCell, haskey, geminiApiKey };
+            explanationEditKey, deleteCell, moveCell, geminiApiKey };
     },
 template: `#app-template`,
 }).mount('#app');
