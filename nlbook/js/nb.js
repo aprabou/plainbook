@@ -168,11 +168,14 @@ createApp({
                 if (notebook.value) {
                     notebook.value.cells.splice(index, 0, cell);
                     activeIndex.value = index;
-                    if (cellType === 'markdown') {
-                        bumpKey(markdownEditKey, index);
-                    } else {
-                        bumpKey(explanationEditKey, index);
-                    }
+                    // Wait for Vue to render the new component before bumping the key
+                    nextTick(() => {
+                        if (cellType === 'markdown') {
+                            bumpKey(markdownEditKey, index);
+                        } else {
+                            bumpKey(explanationEditKey, index);
+                        }
+                    });
                 }
             } catch (err) {
                 console.error('Insert cell error:', err);
