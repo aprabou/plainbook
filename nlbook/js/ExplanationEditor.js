@@ -44,11 +44,6 @@ const ExplanationRenderer = {
             });
         };
 
-        watch(() => props.startEditKey, () => {
-            enterEditMode();
-        });
-
-        // ExplanationEditor.js - setup function
         watch(() => props.startEditKey, (newVal) => {
             if (newVal !== undefined) {
                 enterEditMode();

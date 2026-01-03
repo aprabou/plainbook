@@ -33,15 +33,6 @@ const MarkdownCell = {
             });    
         });    
 
-        watch(() => props.isEditing, (newVal) => {
-            if (newVal) {
-                nextTick(() => {
-                    autoResize();
-                    if (textareaEl.value) textareaEl.value.focus();
-                });
-            }
-        });
-
         const autoResize = () => {
             const el = textareaEl.value;
             if (!el) return;
