@@ -72,6 +72,9 @@ createApp({
                         explanation: content })
                 });
                 if (!response.ok) throw new Error('Failed to save');
+                if (notebook.value && notebook.value.cells[cellIndex]) {
+                    notebook.value.cells[cellIndex].metadata.explanation = content;
+                }
                 console.log('Explanation saved:', cellIndex);
                 const r = await response.json();
                 lastRunIndex.value = r.last_executed_cell;

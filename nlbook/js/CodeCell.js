@@ -1,7 +1,7 @@
 import { ref, watch, nextTick } from './vue.esm-browser.js';
 
 export default {
-    props: ['source', 'executionCount'],
+    props: ['source', 'executionCount', 'isActive'],
     emits: ['save', 'update:source'],
     setup(props, { emit }) {
         const isCollapsed = ref(false);
@@ -9,6 +9,17 @@ export default {
         const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source);
         const textareaEl = ref(null);
 
+        watch(() => props.isActive, (newVal) => {
+            if (!newVal && isEditing.value) {
+                saveCode();
+            }
+        });
+
+        watch(() => props.source, (val) => {
+            localSource.value = Array.isArray(val) ? val.join('') : val;
+            nextTick(autoResize);
+        });
+        
         const autoResize = () => {
             const el = textareaEl.value;
             if (!el) return;
@@ -18,18 +29,7 @@ export default {
             el.style.height = 'auto';
             el.style.height = `${el.scrollHeight}px`;
         };
-
-        // keep local copy in sync if parent changes
-        watch(() => props.source, (val) => {
-            localSource.value = Array.isArray(val) ? val.join('') : val;
-            nextTick(autoResize);
-        });
-
-        watch(localSource, (val) => {
-            emit('update:source', val);
-            nextTick(autoResize);
-        });
-
+       
         const highlightedCode = () => {
             return window.Prism.highlight(
                 localSource.value, 

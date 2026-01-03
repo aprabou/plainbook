@@ -28,12 +28,11 @@ const ExplanationRenderer = {
             nextTick(autoResize);
         });
 
-        // emit on every change for v-model:source
-        watch(localSource, (val) => {
-            emit('update:source', val);
-            nextTick(autoResize);
+        watch(() => props.isActive, (newVal) => {
+            if (!newVal && isEditing.value) {
+                saveChanges();
+            }
         });
-
 
         const enterEditMode = () => {
             originalSource.value = localSource.value;
@@ -55,7 +54,7 @@ const ExplanationRenderer = {
         });
 
         const saveChanges = () => {
-            isEditing.value = false; // emit handled by watch
+            isEditing.value = false;
             emit('save', localSource.value);
         };
 

@@ -33,6 +33,13 @@ const MarkdownCell = {
             });    
         });    
 
+        watch(() => props.isActive, (newVal) => {
+            // If the cell is no longer active and it was being edited, save it.
+            if (!newVal && isEditing.value) {
+                save();
+            }
+        });
+        
         const autoResize = () => {
             const el = textareaEl.value;
             if (!el) return;
