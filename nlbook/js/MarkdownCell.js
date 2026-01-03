@@ -104,6 +104,7 @@ const MarkdownCell = {
                     rows="1"
                     style="overflow: hidden; resize: none; height: 0;"
                     @input="autoResize"
+                    @keydown.enter.shift.prevent="save">
                 ></textarea>
                 <div class="mt-2" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                     <button class="button is-small" @click="cancelEdit">Cancel</button>
