@@ -28,7 +28,15 @@ def gemini_generate_code(api_key, previous_code, instructions):
         )
     )
 
-    return response.text
+    # 4. Process the response
+    # We need to strip the ```python ` and trailing ```
+    # There is no simple way to get gemini not add this :-) 
+    code = response.text
+    if code.startswith("```python"):
+        code = code[len("```python"):].strip()
+    if code.endswith("```"):
+        code = code[:-3].strip()
+    return code
 
 # Usage
 # new_code = generate_notebook_cell(api_key, previous_code, "Plot a sine wave with numpy")

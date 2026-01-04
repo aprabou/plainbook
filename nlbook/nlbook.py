@@ -56,21 +56,13 @@ class NLBook(object):
             self.nb.metadata = {}
             with open(self.path, "w") as f:
                 nbformat.write(self.nb, f)
-        # # DEBUG: Adds explanations to each code cell.
-        # for cell in self.nb.cells:
-        #     if cell.cell_type == 'code':
-        #         explanation = [
-        #             "This cell does something interesting.\n",
-        #             " * It is nice to look at\n",
-        #             " * It might be even interesting to understand\n",
-        #         ]
-        #         cell.metadata['explanation'] = explanation
         self.last_executed_cell = self.nb.metadata.get('last_executed_cell', -1)
                     
     def _write(self):
         self.nb.metadata['last_executed_cell'] = self.last_executed_cell
-        pass # For now, we do not write back to disk.
-    
+        with open(self.path, "w") as f:
+            nbformat.write(self.nb, f)
+                
     def get_cell_json(self, index):
         """Returns the JSON representation of a cell by index."""
         if index < 0 or index >= len(self.nb.cells):
@@ -111,8 +103,10 @@ class NLBook(object):
                 return None, "Not a code cell"
             if index <= self.last_executed_cell:
                 return cell.outputs, "Cached"
-            if index > self.last_executed_cell + 1:
-                raise ExecutionError("Cannot execute cell out of order")
+            # Checks that all intervening cells between last_executed_cell and index are non-code.
+            for i in range(self.last_executed_cell + 1, index):
+                if self.nb.cells[i].cell_type == 'code':
+                    raise ExecutionError("Cannot execute cell out of order")
             # For some reason, the client may have forgotten the kernel client
             # due to threading. 
             self._heal_client()

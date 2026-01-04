@@ -284,6 +284,9 @@ createApp({
 
         // Function in charge of running one cell in the notebook.
         const runOneCell = async (cellIndex) => {
+            if (cellIndex < 0 || cellIndex >= notebook.value.cells.length) return;
+            const cell = notebook.value.cells[cellIndex];
+            if (cell.cell_type !== 'code') return; // Only run code cells
             asRead.value = false;
             try {
                 const response = await fetch(`/execute_cell?token=${authToken}`, {
