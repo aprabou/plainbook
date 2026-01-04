@@ -46,9 +46,7 @@ createApp({
                 loading.value = true;
                 // Replace this URL with your actual callback endpoint
                 const response = await fetch(`/get_notebook?token=${authToken}`);
-                
                 if (!response.ok) throw new Error('Failed to fetch notebook');
-                
                 const r = await response.json();
                 notebook.value = r.nb;
                 notebook_name.value = r.nb_name;
@@ -81,7 +79,7 @@ createApp({
                         cell_index: cellIndex, 
                         explanation: content })
                 });
-                if (!response.ok) throw new Error('Failed to save');
+                if (!response.ok) throw new Error('Failed to save the explanation');
                 if (notebook.value && notebook.value.cells[cellIndex]) {
                     notebook.value.cells[cellIndex].metadata.explanation = content;
                 }
@@ -89,7 +87,7 @@ createApp({
                 const r = await response.json();
                 lastRunIndex.value = r.last_executed_cell;
             } catch (err) {
-                console.error('Save error:', err);
+                throw new Error('Failed to save explanation: ' + err.message);
             }
         };
 
@@ -103,12 +101,12 @@ createApp({
                         cell_index: cellIndex, 
                         source: content })
                 });
-                if (!response.ok) throw new Error('Failed to save');
+                if (!response.ok) throw new Error('Failed to save the code');
                 console.log('Code saved:', cellIndex);
                 const r = await response.json();
                 lastRunIndex.value = r.last_executed_cell;
             } catch (err) {
-                console.error('Save error:', err);
+                throw new Error('Failed to save code: ' + err.message);
             }
         };
 
@@ -130,7 +128,7 @@ createApp({
                     notebook.value.cells[cellIndex].source = content;
                 }
             } catch (err) {
-                console.error('Save markdown error:', err);
+                throw new Error('Failed to save markdown: ' + err.message);
             }
         };
 
@@ -150,7 +148,7 @@ createApp({
                     console.log('Code generated for cell:', cellIndex);
                 }
             } catch (err) {
-                console.error('Generate code error:', err);
+                throw new Error('Failed to generate code: ' + err.message);
             }
         };
 
@@ -205,7 +203,7 @@ createApp({
                     });
                 }
             } catch (err) {
-                console.error('Insert cell error:', err);
+                throw new Error('Failed to insert cell: ' + err.message);
             }
         };
 
@@ -232,7 +230,7 @@ createApp({
                     }
                 }
             } catch (err) {
-                console.error('Delete cell error:', err);
+                throw new Error('Failed to delete cell: ' + err.message);
             }
         };
 
@@ -257,7 +255,7 @@ createApp({
                     activeIndex.value = newIndex;
                 }
             } catch (err) {
-                console.error('Move cell error:', err);
+                throw new Error('Failed to move cell: ' + err.message);
             }
         };
 
@@ -327,7 +325,7 @@ createApp({
                 if (!response.ok) throw new Error('Failed to run cell');
                 const r = await response.json();
                 if (r.status === 'error') {
-                    console.error('Execution error:', r.message);
+                    throw new Error(r.message || 'Execution failed');
                 } else {
                     console.log('Cell executed:', cellIndex, r.details);
                     // Update outputs in the notebook model
@@ -340,7 +338,7 @@ createApp({
                     }
                 }
             } catch (err) {
-                console.error('Run error:', err);
+                throw new Error('Run error: ' + err.message);
             }
         };
 
@@ -354,7 +352,7 @@ createApp({
                 console.log('Kernel interrupted');
                 running.value = false;
             } catch (err) {
-                console.error('Interrupt error:', err);
+                throw new Error('Interrupt error: ' + err.message);
             }
         };
 
@@ -368,7 +366,7 @@ createApp({
                 console.log('Kernel reset');
                 lastRunIndex.value = -1;
             } catch (err) {
-                console.error('Reset error:', err);
+                throw new Error('Reset error: ' + err.message);
             }
         };
 
@@ -411,10 +409,10 @@ createApp({
                 if (response.ok) {
                     console.log('API key saved successfully');
                 } else {
-                    console.error('Failed to save API key');
+                    throw new Error('Failed to save API key');
                 }
             } catch (err) {
-                console.error('Error saving API key:', err);
+                throw new Error('Error saving API key: ' + err.message);
             }
             showSettings.value = false;
         };
