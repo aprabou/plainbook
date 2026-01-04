@@ -89,3 +89,43 @@ pre[class*="language-"] {
 .is-muted {
   opacity: 0.6;
 }
+
+/* Ensure content isn’t hidden behind the fixed navbar */
+body.has-navbar-fixed-top { padding-top: 3.25rem; }      
+/* Make the notebook section scrollable and prevent overlap with navbar */
+.section {
+  height: calc(100vh - 3.25rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Add scroll margin to cells so they don't hide under the navbar when scrolling */
+.notebook-cell {
+  scroll-margin-top: 1rem;
+}
+
+/* Insert cell button hover zone */
+.cell-insert-zone {
+  position: relative;
+  height: 16px;
+  margin: 4px 0;
+}
+
+.cell-insert-buttons {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.cell-insert-zone:hover .cell-insert-buttons {
+  opacity: 1;
+  pointer-events: auto;
+}

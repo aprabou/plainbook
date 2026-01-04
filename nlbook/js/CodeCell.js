@@ -66,7 +66,7 @@ export default {
         return { isCollapsed, toggleCollapse, isEditing, cancelEdit, localSource, highlightedCode, enterEditMode, saveCode, textareaEl, autoResize };
     },
     template: /* html */ `
-        <div class="code-cell-wrapper" style="position: relative; min-height: 1.75rem; border-bottom: 1px solid #e0e0e0;">
+        <div class="code-cell-wrapper" style="position: relative; min-height: 1.75rem;">
             <button class="button is-small is-white px-2"
                     style="position: absolute; top: 0; left: 0; z-index: 1;"
                     @click="toggleCollapse">
@@ -89,12 +89,14 @@ export default {
                         @input="autoResize"
                         @keydown.enter.shift.prevent="saveCode">
                     </textarea>
-                    <button class="button is-small" @click="cancelEdit">
-                        Cancel
-                    </button>
-                    <button class="button is-small is-primary" @click="saveCode">
-                        Save
-                    </button>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        <button class="button is-small" @click="cancelEdit">
+                            Cancel
+                        </button>
+                        <button class="button is-small is-primary" @click="saveCode">
+                            Save
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
