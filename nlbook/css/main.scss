@@ -8,6 +8,7 @@
   $pre-padding: 0.5rem,
   $control-size: 0.85rem,
   $body-line-height: 1.5,
+  $navbar-breakpoint: 1px, // Disable Bulma navbar responsiveness
 );
 
 // 4. Your Prism Fix (The alignment fix)
@@ -39,11 +40,6 @@ pre[class*="language-"] {
   display: none;
 }
 
-// Ensure navbar is always visible (not collapsed)
-.navbar-menu {
-  display: flex !important;
-}
-
 // Hide button text on narrow screens, show only icons
 @media screen and (max-width: 768px) {
   .navbar-item .button span:not(.icon) {
@@ -57,18 +53,6 @@ pre[class*="language-"] {
   .navbar-item .button .icon {
     margin: 0 !important;
   }
-}
-
-// Notebook viewport: prevent content from scrolling under the navbar
-.section {
-  height: calc(100vh - 3.25rem);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-// Ensure cells don't end up hidden under the navbar when scrolled into view
-.notebook-cell {
-  scroll-margin-top: 1rem;
 }
 
 // Explanation toolbar strip under rendered output
@@ -88,15 +72,6 @@ pre[class*="language-"] {
 // Muted utility for subtle buttons
 .is-muted {
   opacity: 0.6;
-}
-
-/* Ensure content isn’t hidden behind the fixed navbar */
-body.has-navbar-fixed-top { padding-top: 3.25rem; }      
-/* Make the notebook section scrollable and prevent overlap with navbar */
-.section {
-  height: calc(100vh - 3.25rem);
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
 /* Add scroll margin to cells so they don't hide under the navbar when scrolling */

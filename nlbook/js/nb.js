@@ -1,4 +1,4 @@
-import { createApp, ref, onMounted, onBeforeUnmount, nextTick } from './vue.esm-browser.js';
+import { createApp, ref, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from './vue.esm-browser.js';
 
 import MarkdownCell from './MarkdownCell.js';
 import OutputRenderer from './OutputRenderer.js';
@@ -17,9 +17,17 @@ createApp({
         const notebook_name = ref('');
         const loading = ref(true);
         const error = ref(null);
+        const uiError = ref(null); // Error bar state
         const activeIndex = ref(-1);
         const markdownEditKey = ref({});
         const explanationEditKey = ref({});
+
+        // Configure global error handler
+        const app = getCurrentInstance().appContext.app;
+        app.config.errorHandler = (err, instance, info) => {
+            console.error("Global error:", err);
+            uiError.value = err.message || String(err);
+        };
 
         // For running a notebook.
         const running = ref(false);
@@ -29,6 +37,8 @@ createApp({
         // For settings modal
         const showSettings = ref(false);
         const geminiApiKey = ref('');
+        // For info modal
+        const showInfo = ref(false);
 
         // 2. Define the fetch logic
         const fetchNotebook = async () => {
@@ -409,6 +419,22 @@ createApp({
             showSettings.value = false;
         };
 
+        const genError = () => {
+            throw new Error('This is a generated error for testing purposes. This is a generated error for testing purposes. This is a generated error for testing purposes. This is a generated error for testing purposes. ');
+        }
+
+        const openInfo = () => {
+            showInfo.value = true;
+        };
+
+        const closeInfo = () => {
+            showInfo.value = false;
+        };
+
+        const closeUiError = () => {
+            uiError.value = null;
+        };
+
         const handleClickOutside = (event) => {
             const container = document.querySelector('.notebook-container');
             if (container && !container.contains(event.target)) {
@@ -432,7 +458,10 @@ createApp({
             sendMarkdownToServer, generateCode, activeIndex, reloadNotebook,
             regenerateAllCode, regenerateAndRunAllCode,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
-            interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, 
+            interruptKernel, insertCell, markdownEditKey, 
+            openSettings, closeSettings, showSettings, 
+            openInfo, closeInfo, showInfo, 
+            genError, uiError, closeUiError,
             explanationEditKey, deleteCell, moveCell, geminiApiKey };
     },
 template: `#app-template`,

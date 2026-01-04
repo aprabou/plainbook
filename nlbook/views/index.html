@@ -8,6 +8,24 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/font-awesome.css">
     <style>
+        /* Prevent the main page from scrolling */
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow: hidden; 
+    }
+    /* The main wrapper for your app */
+    #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh; /* Full viewport height */
+    }
+    /* The scrollable area */
+    .notebook-area {
+        flex-grow: 1;      /* Take up all remaining space */
+        overflow-y: auto;  /* Scroll only this div */
+        padding-top: 1.5rem;
+    }
     </style>
   </head>
   <body class="has-navbar-fixed-top">
@@ -61,6 +79,12 @@
             <div class="navbar-end">
                 <div class="navbar-item">
                     <div class="buttons">
+                        <button id="btn-info" class="button is-danger" @click="genError">
+                            <span class="icon"><i class="fa fa-exclamation"></i></span>
+                        </button>
+                        <button id="btn-info" class="button is-light" @click="openInfo">
+                            <span class="icon"><i class="fa fa-info"></i></span>
+                        </button>
                         <button id="btn-settings" class="button is-info" @click="openSettings">
                             <span class="icon"><i :class="geminiApiKey ? 'fa fa-cog' : 'fa fa-warning'"></i></span>
                             <span>Settings</span>
@@ -71,7 +95,13 @@
         </div>
     </nav>
 
-    <div class="section">
+    <div v-if="uiError" class="notification mb-0 mt-0 px-4 pl-2 pr-6 has-text-danger has-background-danger-light" 
+        style="width: 100%; border-radius: 0; align-items: center; justify-content: space-between;">
+        <span><strong>Error:</strong> {{ uiError }}</span>
+        <button class="delete" @click="closeUiError"></button>
+    </div>
+
+    <div class="section notebook-area">
         <h1 class="title">{{ notebook_name }}</h1>
         <div class="notebook-container px-2 py-2">
             <div v-if="loading" class="has-text-centered py-6">
@@ -171,6 +201,35 @@
             </footer>
         </div>
     </div>
+
+    <!-- Info Modal -->
+    <div class="modal" :class="{'is-active': showInfo}">
+        <div class="modal-background" @click="closeInfo"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Information</p>
+                <button class="delete" aria-label="close" @click="closeInfo"></button>
+            </header>
+            <section class="modal-card-body">
+                <h1 class="title">NLBook</h1>
+                <div class="content">
+                    <p>NLBook is an interactive notebook application for creating executable doocuments in 
+                        natural language.  A notebook consists of:</p>
+                    <ul>
+                        <li><strong>Action cells</strong> that contain an English explanation. The explanation is 
+                            used to generate Python code using an AI model. The generated code is then executed, 
+                            and the output is displayed below the cell.</li>
+                        <li><strong>Markdown cells</strong> for writing explanations, comments, and documentation in rich text format.</li>
+                    </ul>
+                    <p><a href="https://github.com/lucadealfaro/nlbook" target="_blank">NLBook Home Page</a></p>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" @click="closeInfo">Close</button>
+            </footer>
+        </div>
+    </div>
+
     </script>
     
     <footer class="footer">
