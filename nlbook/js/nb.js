@@ -137,10 +137,24 @@ createApp({
                 lastRunIndex.value = r.last_executed_cell;
                 if (notebook.value && notebook.value.cells[cellIndex]) {
                     notebook.value.cells[cellIndex].source = r.code;
+                    console.log('Code generated for cell:', cellIndex);
                 }
             } catch (err) {
                 console.error('Generate code error:', err);
             }
+        };
+
+        const regenerateAllCode = async () => {
+            for (let i = 0; i < notebook.value.cells.length; i++) {
+                if (notebook.value.cells[i].cell_type === 'code') {
+                    await generateCode(i);
+                }
+            }
+        };
+
+        const regenerateAndRunAllCode = async () => {
+            await regenerateAllCode();
+            await runAllCells();
         };
 
         const setActiveCell = (idx, shouldScroll = false) => { 
@@ -416,6 +430,7 @@ createApp({
         return { notebook, notebook_name, loading, error, sendExplanationToServer, 
             sendCodeToServer, saveExplanationAndRun,
             sendMarkdownToServer, generateCode, activeIndex, reloadNotebook,
+            regenerateAllCode, regenerateAndRunAllCode,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, showSettings, openSettings, closeSettings, insertCell, markdownEditKey, 
             explanationEditKey, deleteCell, moveCell, geminiApiKey };

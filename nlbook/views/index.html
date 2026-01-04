@@ -20,19 +20,7 @@
             <div class="navbar-start">
                 <div class="navbar-item">
                     <div class="buttons">
-                        <button v-if="!running && notebook && lastRunIndex < notebook.cells.length - 1"
-                            @click="runAllCells"
-                            class="button is-primary">
-                            <span class="icon"><i class="fa fa-play"></i></span>
-                            <span>Run All</span>
-                        </button>
-                        <button v-else-if="!running && notebook && lastRunIndex >= notebook.cells.length - 1"
-                                disabled
-                                class="button is-primary">
-                            <span class="icon"><i class="fa fa-check"></i></span>
-                            <span>Up to Date</span>
-                        </button>
-                        <button v-else-if="running"
+                        <button v-if="running && notebook"
                                 @click="interruptKernel"
                                 class="button is-danger">
                             <span class="icon"><i class="fa fa-stop"></i></span>
@@ -40,9 +28,32 @@
                         </button>
                         <button v-if="!running && notebook"
                             @click="reloadNotebook"
-                            class="button is-warning">
+                            class="button is-light">
                             <span class="icon"><i class="fa fa-refresh"></i></span>
                             <span>Refresh</span>
+                        </button>
+                        <button v-if="!running && notebook && lastRunIndex >= notebook.cells.length - 1"
+                                class="button is-light">
+                            <span class="icon"><i class="fa fa-check"></i></span>
+                            <span>Up to Date</span>
+                        </button>
+                        <button v-if="!running && notebook"
+                            @click="regenerateAndRunAllCode"
+                            class="button is-warning">
+                            <span class="icon"><i class="fa fa-repeat"></i></span>
+                            <span class="icon"><i class="fa fa-play"></i></span>
+                        </button>
+                        <button v-if="!running && notebook"
+                            @click="regenerateAllCode"
+                            class="button is-warning">
+                            <span class="icon"><i class="fa fa-repeat"></i></span>
+                            <span>Regenerate All</span>
+                        </button>
+                        <button v-if="!running && notebook && lastRunIndex < notebook.cells.length - 1"
+                            @click="runAllCells"
+                            class="button is-primary">
+                            <span class="icon"><i class="fa fa-play"></i></span>
+                            <span>Run All</span>
                         </button>
                     </div>
                 </div>
