@@ -2,7 +2,7 @@ import { ref, computed, watch, nextTick } from './vue.esm-browser.js';
 
 const ExplanationRenderer = {
     props: ['source', 'isActive', 'index', 'lastRunIndex', 'asRead', 'startEditKey'],
-    emits: ['update:source', 'save', 'gencode', 'run', 'delete', 'moveUp', 'moveDown'],
+    emits: ['update:source', 'save', 'saveandrun', 'gencode', 'run', 'delete', 'moveUp', 'moveDown'],
     setup(props, { emit }) {
         const isEditing = ref(false);
         const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source);
@@ -58,6 +58,11 @@ const ExplanationRenderer = {
             emit('save', localSource.value);
         };
 
+        const saveAndRun = () => {
+            isEditing.value = false;
+            emit('saveandrun', localSource.value);
+        };
+
         const cancelEdit = () => {
             localSource.value = originalSource.value;
             isEditing.value = false;
@@ -71,8 +76,8 @@ const ExplanationRenderer = {
             emit('run');
         }
 
-        return { isEditing, localSource, rendered, enterEditMode, saveChanges, cancelEdit, textareaEl, autoResize, 
-            generateCode, runCell };
+        return { isEditing, localSource, rendered, enterEditMode, saveChanges, 
+            cancelEdit, textareaEl, autoResize, saveAndRun, generateCode, runCell };
     },
     template: /* html */ `
         <div class="explanation-container pt-3 pl-4 pr-4 pb-1">
@@ -122,14 +127,17 @@ const ExplanationRenderer = {
                 rows="1"
                 style="overflow: hidden; resize: none; height: 0;"
                 @input="autoResize"
-                @keydown.enter.shift.prevent="saveChanges">
+                @keydown.enter.shift.prevent="saveAndRun">
             </textarea>
             <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                 <button class="button is-small" @click="cancelEdit">
                     Cancel
                 </button>
-                <button class="button is-small is-primary" @click="saveChanges">
+                <button class="button is-small is-info" @click="saveChanges">
                     Save
+                </button>
+                <button class="button is-small is-primary" @click="saveAndRun">
+                    Save and Run
                 </button>
             </div>
         </div>

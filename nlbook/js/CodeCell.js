@@ -126,7 +126,7 @@ export default {
             <button class="button is-small is-white px-2"
                     style="position: absolute; top: 0; left: 0; z-index: 1;"
                     @click="toggleCollapse">
-                {{ isCollapsed ? '▶' : '▼' }}
+                {{ isCollapsed ? '▶ &nbsp;Show code' : '▼' }}
             </button>
 
             <div v-if="!isCollapsed" style="padding-left: 2.25rem;">
