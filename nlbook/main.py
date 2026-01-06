@@ -258,7 +258,7 @@ def logger_middleware(app):
     
     
 def main():   
-    port = find_free_port(8080)
+    port = find_free_port()
     url = f"http://127.0.0.1:{port}/?token={AUTH_TOKEN}"
     if args.debug:  
         print(f"Please load this URL: {url}")
