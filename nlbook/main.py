@@ -239,7 +239,7 @@ def find_free_port(start_port):
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
-                s.bind(('localhost', port))
+                s.bind(('127.0.0.1', port))
                 return port
             except OSError:
                 port += 2
@@ -257,7 +257,7 @@ def logger_middleware(app):
     
 def main():   
     port = find_free_port(8080)
-    url = f"http://localhost:{port}/?token={AUTH_TOKEN}"
+    url = f"http://127.0.0.1:{port}/?token={AUTH_TOKEN}"
     if args.debug:  
         print(f"Please load this URL: {url}")
     else:
@@ -268,7 +268,7 @@ def main():
     app_with_logging = logger_middleware(default_app()) if args.debug else default_app()
     # Do not use reloader=True. 
     try:
-        run(app=app_with_logging, host='localhost', port=port, server='cheroot',
+        run(app=app_with_logging, host='127.0.0.1', port=port, server='cheroot',
             numthreads=10, 
             debug=args.debug)
     finally:
