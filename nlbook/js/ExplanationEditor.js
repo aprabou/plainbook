@@ -95,17 +95,17 @@ const ExplanationRenderer = {
                 class="explanation-toolbar has-background-grey-lighter pl-3 pr-3"
                 style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem">
             <div class="toolbar-left">
-                <span class="run-buttons mr-1">
-                    <button v-if="index === lastRunIndex" class="button is-small is-primary" @click.stop="runCell">
+                <button class="button run-button is-small is-primary mr-1" @click.stop="runCell">
+                    <template v-if="lastRunIndex === index">
                         <span class="icon"><i class="fa fa-repeat"></i></span> <span>Re-Run</span>
-                    </button>
-                    <button v-else-if="lastRunIndex < index" class="button is-small is-primary" @click.stop="runCell">
+                    </template>
+                    <template v-else-if="lastRunIndex < index">
                         <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run Up To Here</span>
-                    </button>
-                    <button v-else class="button is-small is-primary" @click.stop="runCell">
+                    </template>
+                    <template v-else>
                         <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run From Start To Here</span>
-                    </button>
-                </span>
+                    </template>
+                </button>
                 <button class="button is-small" style="opacity: 0.6;">
                     <span v-if="asRead">Unmodified</span>
                     <span v-else-if="lastRunIndex < index">Needs running</span>
