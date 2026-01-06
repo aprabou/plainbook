@@ -80,6 +80,17 @@ pre[class*="language-"] {
   } 
 }
 
+.explanation-toolbar .toolbar-left .run-buttons .button {
+  @media (max-width: 768px) {
+    span:not(.icon) {
+      display: none !important;
+    }
+    span.icon {
+      margin: 0 !important;
+    }
+  } 
+}
+
 // Muted utility for subtle buttons
 .is-muted {
   opacity: 0.6;

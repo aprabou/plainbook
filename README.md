@@ -7,8 +7,18 @@ Luca de Alfaro, dealfaro@acm.org
 ## Overview
 
 Natural Language Notebooks (NLBook) allow you to create notebooks where the cells are written in natural language. 
-The natural language is automatically converted to code via AI, and executed.
-The natural language is retained, so you can edit it, improve it, and so forth. 
+The natural language is automatically converted to code via AI, and executed.  The results of the execution are then displayed below the natural language cell. 
+
+**In NLBooks, natural language is the programming language.**
+The goal of NLBooks is to allow users to create and share notebooks in natural language, without having to write code, or understand the code that is shared with them. 
+Actions to be performed are described in natural language, and the natural languate is retained, so users can edit it, improve it, and share it. 
+We are building methods for verifying that the code implementation is faithful to the natural language description, so that users can trust the notebooks they receive from others.
+
+Natural Language Notebooks have two type of cells: 
+
+* **Action cells**, where the user describes in natural language the action to be performed (e.g., "Load the dataset from file data.csv and display the first 10 rows").  The system converts the description to code, executes it, and displays the results below the cell.
+
+* **Comment cells**, where the user can add comments, section headers, and so forth, using markdown syntax. 
 
 Differently from other notebook systems, NLBooks are executed from start to end: random cell execution order, as in Jupyter notebooks, is not allowed.  This ensures that the results are obtained in the same order in which a human reader would read the notebook.
 

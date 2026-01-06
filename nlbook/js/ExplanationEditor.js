@@ -2,7 +2,8 @@ import { ref, computed, watch, nextTick } from './vue.esm-browser.js';
 
 const ExplanationRenderer = {
     props: ['source', 'isActive', 'index', 'lastRunIndex', 'asRead', 'startEditKey'],
-    emits: ['update:source', 'save', 'saveandrun', 'gencode', 'run', 'delete', 'moveUp', 'moveDown'],
+    emits: ['update:source', 'save', 'saveandrun', 'gencode', 'validate', 
+            'run', 'delete', 'moveUp', 'moveDown'],
     setup(props, { emit }) {
         const isEditing = ref(false);
         const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source);
@@ -76,8 +77,12 @@ const ExplanationRenderer = {
             emit('run');
         }
 
+        const validateCode = () => {
+            emit('validate');
+        }
+
         return { isEditing, localSource, rendered, enterEditMode, saveChanges, 
-            cancelEdit, textareaEl, autoResize, saveAndRun, generateCode, runCell };
+            cancelEdit, textareaEl, autoResize, saveAndRun, generateCode, runCell, validateCode };
     },
     template: /* html */ `
         <div class="explanation-container pt-3 pl-4 pr-4 pb-1">
@@ -90,6 +95,17 @@ const ExplanationRenderer = {
                 class="explanation-toolbar has-background-grey-lighter pl-3 pr-3"
                 style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem">
             <div class="toolbar-left">
+                <span class="run-buttons mr-1">
+                    <button v-if="index === lastRunIndex" class="button is-small is-primary" @click.stop="runCell">
+                        <span class="icon"><i class="fa fa-repeat"></i></span> <span>Re-Run</span>
+                    </button>
+                    <button v-else-if="lastRunIndex < index" class="button is-small is-primary" @click.stop="runCell">
+                        <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run Up To Here</span>
+                    </button>
+                    <button v-else class="button is-small is-primary" @click.stop="runCell">
+                        <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run From Start To Here</span>
+                    </button>
+                </span>
                 <button class="button is-small" style="opacity: 0.6;">
                     <span v-if="asRead">Unmodified</span>
                     <span v-else-if="lastRunIndex < index">Needs running</span>
@@ -100,21 +116,19 @@ const ExplanationRenderer = {
                 <button class="button is-small is-info" @click.stop="enterEditMode">
                     Edit
                 </button>
-                <button class="button is-small is-warning" @click.stop="generateCode">
-                    <span class="icon"><i class="fa fa-repeat"></i></span> <span>Regenerate Code</span>
+                <button class="button is-small is-info py-1 " title="Move Up" aria-label="Move Up" @click.stop="$emit('moveUp')">
+                    <span class="icon"><i class="fa fa-arrow-up"></i></span>
                 </button>
-                <button v-if="index === lastRunIndex" class="button is-small is-primary" @click.stop="runCell">
-                    <span class="icon"><i class="fa fa-repeat"></i></span> <span>Re-Run</span>
+                <button class="button is-small is-info py-1 " title="Move Down" aria-label="Move Down" @click.stop="$emit('moveDown')">
+                    <span class="icon"><i class="fa fa-arrow-down"></i></span>
                 </button>
-                <button v-else-if="lastRunIndex < index" class="button is-small is-primary" @click.stop="runCell">
-                    <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run Up To Here</span>
+                <button class="button is-small is-success" @click.stop="generateCode">
+                <span class="icon"><i class="fa fa-repeat"></i></span> <span>Regenerate Code</span>
                 </button>
-                <button v-else class="button is-small is-primary" @click.stop="runCell">
-                    <span class="icon"><i class="fa fa-step-forward"></i></span> <span>Run From Start To Here</span>
+                <button class="button is-small is-success" @click.stop="validateCode">
+                <span class="icon"><i class="fa fa-check"></i></span> <span>Validate Code</span>
                 </button>
-                    <button class="button is-small is-success py-1 " title="Move Up" aria-label="Move Up" @click.stop="$emit('moveUp')"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
-                    <button class="button is-small is-success py-1 " title="Move Down" aria-label="Move Down" @click.stop="$emit('moveDown')"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
-                    <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete" @click.stop="$emit('delete')"><span class="icon"><i class="fa fa-trash"></i></span></button>
+                <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete" @click.stop="$emit('delete')"><span class="icon"><i class="fa fa-trash"></i></span></button>
             </div>
         </div>
 
