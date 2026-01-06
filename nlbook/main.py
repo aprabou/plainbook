@@ -45,6 +45,8 @@ parser.add_argument('notebook', nargs='?',
                     help='Path to the notebook file to open')
 parser.add_argument('--debug', action='store_true', default=False,
                     help='Enable debug mode')
+parser.add_argument('--port', type=int, default=8080,
+                    help='Port to run the server on')
 args = parser.parse_args()
 
 AUTH_TOKEN = "secret" if args.debug else secrets.token_hex(32)
@@ -234,8 +236,8 @@ def cancel_ai_request():
 ################################
 # Server startup
 
-def find_free_port(start_port):
-    port = start_port
+def find_free_port():
+    port = args.port
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
