@@ -5,11 +5,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plainbook"
-version = "0.0.6"
+version = "0.0.7"
 description = "Plain Language Notebooks"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "BSD-3-Clause"}
+license = "BSD-3-Clause"
+license-files = ["LICENSE.md"]
 authors = [
     {name = "Luca de Alfaro", email = "dealfaro@acm.org"}
 ]
@@ -29,10 +30,10 @@ plainbook = "plainbook.main:main"
 Homepage = "https://github.com/lucadealfaro/plainbook"
 Issues = "https://github.com/lucadealfaro/plainbook/issues"
 
-[tool.setuptools]
-# Tells setuptools where to find your code in a flat layout
-packages = ["plainbook"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["plainbook*"]
 
 [tool.setuptools.package-data]
-# Ensures your CSS, JS, and HTML files are included in the package
+# 3. Your files will still be included because they are part of 'plainbook'
 plainbook = ["js/*.js", "css/*.css", "views/*.html", "fonts/*"]
