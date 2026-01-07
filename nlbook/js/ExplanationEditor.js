@@ -38,7 +38,6 @@ const ExplanationRenderer = {
         });
 
         watch(() => props.isLocked, (newVal) => {
-            console.log("Lock status changed:", newVal);
             localIsLocked.value = newVal;
             if (newVal) {
                 cancelEdit();

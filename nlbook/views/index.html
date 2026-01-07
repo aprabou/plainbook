@@ -147,11 +147,11 @@
                             cursor: 'pointer'
                          }">
                         <markdown-cell v-if="cell.cell_type === 'markdown'" :source="cell.source" 
-                                       :is-locked="isLocked"
                                        :is-active="activeIndex === index"
                                        :start-edit-key="markdownEditKey[index]"
-                                       @save="(content) => sendMarkdownToServer(content, index)"
                                        :index="index"
+                                       :isLocked="isLocked" 
+                                       @save="(content) => sendMarkdownToServer(content, index)"
                                        @delete="deleteCell(index)"
                                        @moveUp="moveCell(index, -1)"
                                        @moveDown="moveCell(index, 1)" />

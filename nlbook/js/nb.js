@@ -491,6 +491,8 @@ createApp({
         const handleClickOutside = (event) => {
             const container = document.querySelector('.notebook-container');
             if (container && !container.contains(event.target)) {
+                console.log("Target: ", event.target);
+                console.log(container.contains(event.target));
                 activeIndex.value = -1;
             }
         };

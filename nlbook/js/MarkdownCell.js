@@ -1,13 +1,14 @@
 import { ref, watch, nextTick } from './vue.esm-browser.js';
 
 const MarkdownCell = {
-    props: ['source', 'startEditKey', 'isActive', 'index'],
+    props: ['source', 'startEditKey', 'isActive', 'index', 'isLocked'],
     emits: ['save', 'delete', 'moveUp', 'moveDown'],
     setup(props, { emit }) {
         const md = new markdownit({ html: true });
         const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source || '');
         const originalSource = ref(localSource.value);
         const textareaEl = ref(null);
+        const localIsLocked = ref(props.isLocked);
 
         // Create a local editing state instead of using props.isEditing
         const isEditing = ref(false);
@@ -39,7 +40,14 @@ const MarkdownCell = {
                 save();
             }
         });
-        
+
+        watch(() => props.isLocked, (newVal) => {
+            localIsLocked.value = newVal;
+            // if (newVal) {
+            //     cancelEdit();
+            // }
+        });
+
         const autoResize = () => {
             const el = textareaEl.value;
             if (!el) return;
@@ -74,7 +82,8 @@ const MarkdownCell = {
             refresh();
         };
 
-        return { localSource, rendered, textareaEl, enterEditMode, cancelEdit, save, autoResize, isEditing: isEditing };
+        return { localSource, rendered, textareaEl, enterEditMode, cancelEdit, save, autoResize, 
+            localIsLocked, isEditing: isEditing };
     },
 
     template: /* html */ `
@@ -82,15 +91,13 @@ const MarkdownCell = {
             <div class="p-2" v-if="!isEditing" @dblclick="enterEditMode" v-html="rendered"></div>
 
             <!-- bottom toolbar -->
-            <div v-if="!isEditing && isActive"
+            <div v-if="!isEditing && isActive && !localIsLocked"
                  class="explanation-toolbar has-background-grey-lighter pl-3 pr-3"
                  style="display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;">
                 <div class="toolbar-right" style="display: flex; gap: 0.25rem;">
-                    <button class="button is-small is-info" @click="enterEditMode">
-                        Edit
-                    </button>
-                    <button class="button is-small is-info py-1 " title="Move Up" aria-label="Move Up" @click.stop="$emit('moveUp')"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
-                    <button class="button is-small is-info py-1 " title="Move Down" aria-label="Move Down" @click.stop="$emit('moveDown')"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
+                    <button class="button is-small is-info" title="Edit markdown" @click.stop="enterEditMode">Edit</button>
+                    <button class="button is-small is-info py-1 " title="Move up" aria-label="Move Up" @click.stop="$emit('moveUp')"><span class="icon"><i class="fa fa-arrow-up"></i></span></button>
+                    <button class="button is-small is-info py-1 " title="Move down" aria-label="Move Down" @click.stop="$emit('moveDown')"><span class="icon"><i class="fa fa-arrow-down"></i></span></button>
                     <button class="button is-small is-danger py-1 " title="Delete" aria-label="Delete" @click.stop="$emit('delete')"><span class="icon"><i class="fa fa-trash"></i></span></button>
                 </div>
             </div>
