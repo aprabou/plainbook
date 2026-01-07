@@ -305,13 +305,16 @@ def main():
     app_with_logging = logger_middleware(default_app()) if args.debug else default_app()
     # Do not use reloader=True. 
     try:
-        run(app=app_with_logging, host='127.0.0.1', port=port, server='cheroot',
-            numthreads=10, 
+        run(app=app_with_logging, host='127.0.0.1', port=port, 
+            server='cheroot', numthreads=10, 
             debug=args.debug)
+    except KeyboardInterrupt:
+            print("\nStopping server...")
     finally:
-        # This provides a final safety net for the main thread loop
         try:
             loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.stop()
             if not loop.is_closed():
                 loop.close()
         except:

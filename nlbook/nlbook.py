@@ -147,6 +147,13 @@ class NLBook(object):
         self.kc = self.km.client()
         # 5. Start channels on the NEW client (this will NOT error)
         self.kc.start_channels()
+        # 5b. Wait for the kernel to respond to a heartbeat
+        # This prevents the iopub_channel.get_msg hang.
+        try:
+            self.kc.wait_for_ready(timeout=5) 
+        except Exception as e:
+            print(f"Kernel failed to become ready: {e}")
+            raise e
         # 6. Update the NotebookClient with the new references
         self.client.km = self.km
         self.client.kc = self.kc
@@ -159,7 +166,7 @@ class NLBook(object):
             print("Interrupting kernel...")
             self.km.interrupt_kernel()
                         
-    def _shutdown(self):
+    def _old_shutdown(self):
             """Cleanly shuts down the kernel and closes channels."""
             print(f"Shutting down kernel for {self.name}...")
             try:
@@ -179,6 +186,46 @@ class NLBook(object):
             except RuntimeError:
                 # Loop already closed or doesn't exist
                 pass
+
+    def _shutdown(self):
+        # 1. Shutdown the Kernel Client (Channels)
+        if hasattr(self, 'kc') and self.kc:
+            try:
+                # If using Async client, this should ideally be awaited
+                self.kc.stop_channels()
+            except Exception as e:
+                print(f"Error stopping channels: {e}")
+
+        # 2. Shutdown the Kernel Manager (The actual process)
+        if hasattr(self, 'km') and self.km:
+            try:
+                # Ensure the process is killed
+                self.km.shutdown_kernel(now=True)
+                
+                # Explicitly cleanup the ZMQ context to release ports/threads
+                if hasattr(self.km, 'context') and self.km.context:
+                    self.km.context.destroy(linger=0)
+            except Exception as e:
+                print(f"Error shutting down kernel process: {e}")
+
+        # 3. Handle the Event Loop (Only if you are the owner)
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Stop any pending tasks before stopping the loop
+                for task in asyncio.all_tasks(loop):
+                    task.cancel()
+                loop.stop()
+            if not loop.is_closed():
+                loop.close()
+        except Exception:
+            pass
+
+        # 4. Final Cleanup of threads (Optional but safe)
+        # This prevents 'threading' from waiting for non-daemon threads to exit
+        for thread in threading.enumerate():
+            if thread is not threading.current_thread() and thread.daemon is False:
+                print(f"Warning: Non-daemon thread {thread.name} still active.")
 
     # Cell insertion, deletion, and movement methods
     
