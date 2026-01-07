@@ -117,7 +117,9 @@ class NLBook(object):
             
     def reset_kernel(self):
         """Resets the kernel."""
+        print("Request to reset kernel received...")
         with self._lock:
+            print("Resetting kernel...")
             self._reset_kernel()
             
     def _reset_kernel(self):        

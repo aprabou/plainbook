@@ -27,7 +27,7 @@ createApp({
         // Configure global error handler
         const app = getCurrentInstance().appContext.app;
         app.config.errorHandler = (err, instance, info) => {
-            console.error("Global error:", err);
+            console.error("Global error:", err, instance, info);
             uiError.value = err.message || String(err);
         };
 
@@ -365,6 +365,11 @@ createApp({
             }
         };
 
+        const resetAndRunAllCells = async () => {
+            await resetKernel();
+            await runAllCells();
+        };
+
         // Function in charge of running one cell in the notebook.
         const runOneCell = async (cellIndex) => {
             if (cellIndex < 0 || cellIndex >= notebook.value.cells.length) return;
@@ -491,8 +496,6 @@ createApp({
         const handleClickOutside = (event) => {
             const container = document.querySelector('.notebook-container');
             if (container && !container.contains(event.target)) {
-                console.log("Target: ", event.target);
-                console.log(container.contains(event.target));
                 activeIndex.value = -1;
             }
         };
@@ -513,7 +516,7 @@ createApp({
             sendCodeToServer, saveExplanationAndRun,
             sendMarkdownToServer, generateCode, activeIndex, reloadNotebook,
             regenerateAllCode, regenerateAndRunAllCode,
-            validateCode, dismissValidation, 
+            validateCode, dismissValidation, resetAndRunAllCells,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, insertCell, markdownEditKey, 
             openSettings, closeSettings, showSettings, 

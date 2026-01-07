@@ -88,7 +88,8 @@ const MarkdownCell = {
 
     template: /* html */ `
         <div class="markdown-body content" style="position: relative; min-height: 2.5rem;">
-            <div class="p-2" v-if="!isEditing" @dblclick="enterEditMode" v-html="rendered"></div>
+            <div class="p-2 block mb-0" v-if="!isEditing" @dblclick="enterEditMode" 
+                style="min-height: 1.6em" v-html="rendered"></div>
 
             <!-- bottom toolbar -->
             <div v-if="!isEditing && isActive && !localIsLocked"
