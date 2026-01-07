@@ -4,9 +4,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nlbook"
-version = "0.0.5"
-description = "Natural Language Notebooks"
+name = "plainbook"
+version = "0.0.6"
+description = "Plain Language Notebooks"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "BSD-3-Clause"}
@@ -22,17 +22,17 @@ dynamic = ["dependencies"]
 dependencies = {file = ["requirements.txt"]}
 
 [project.scripts]
-nlbook = "nlbook.main:main"
+plainbook = "plainbook.main:main"
 
 [project.urls]
 # Links displayed on the PyPI project page
-Homepage = "https://github.com/lucadealfaro/nlbook"
-Issues = "https://github.com/lucadealfaro/nlbook/issues"
+Homepage = "https://github.com/lucadealfaro/plainbook"
+Issues = "https://github.com/lucadealfaro/plainbook/issues"
 
 [tool.setuptools]
 # Tells setuptools where to find your code in a flat layout
-packages = ["nlbook"]
+packages = ["plainbook"]
 
 [tool.setuptools.package-data]
 # Ensures your CSS, JS, and HTML files are included in the package
-nlbook = ["js/*.js", "css/*.css", "views/*.html", "fonts/*"]
+plainbook = ["js/*.js", "css/*.css", "views/*.html", "fonts/*"]

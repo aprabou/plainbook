@@ -1,11 +1,12 @@
-nlbook/css/node_modules
+plainbook/css/node_modules
 .venv
 __pycache__/
+plainbook/__pycache__/
 *.pyc
 .DS_Store
-nlbook-ref/
+plainbook-ref/
 .gemini/
-nlbook.egg-info/
+plainbook.egg-info/
 dist/
 build/
 .vscode/

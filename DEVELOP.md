@@ -5,7 +5,7 @@
 From the git repo: 
 
 ```bash
-pip install --no-cache-dir --force-reinstall git+ssh://git@github.com/lucadealfaro/nlbook.git
+pip install --no-cache-dir --force-reinstall git+ssh://git@github.com/lucadealfaro/plainbook.git
 ```
 
 ## Building the package

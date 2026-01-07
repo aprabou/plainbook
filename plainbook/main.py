@@ -17,8 +17,8 @@ from bottle import run, default_app, request, TEMPLATE_PATH
 
 # print(f"DEBUGGER PYTHON: {sys.executable}")
 
-# NLBook imports
-from .nlbook import NLBook, ExecutionError
+# Plainbook imports
+from .plainbook import Plainbook, ExecutionError
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
@@ -27,7 +27,7 @@ PARENT_FOLDER = app_path.parent
 TEST_INPUTS = os.path.join(PARENT_FOLDER, "tests/files")
 
 # Configuration file, the 'Good Citizen' way
-APP_NAME = "nlbook"
+APP_NAME = "plainbook"
 CONFIG_DIR = Path.home() / ".config" / APP_NAME
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILE = CONFIG_DIR / "settings.yaml"
@@ -39,7 +39,7 @@ except FileNotFoundError:
     settings = {}
 
 # Parse command line arguments
-parser = argparse.ArgumentParser(description='Run the nlbook notebook server')
+parser = argparse.ArgumentParser(description='Run the plainbook notebook server')
 parser.add_argument('notebook', nargs='?', 
                     default=os.path.join(TEST_INPUTS, 'sample_notebook.ipynb'),
                     help='Path to the notebook file to open')
@@ -53,7 +53,7 @@ AUTH_TOKEN = "secret" if args.debug else secrets.token_hex(32)
                     
 notebook_path = os.path.abspath(args.notebook)
     
-notebook = NLBook(notebook_path)
+notebook = Plainbook(notebook_path)
 assert notebook.kc is not None
 assert notebook.km.is_alive()
                     

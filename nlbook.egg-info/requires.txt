@@ -1,8 +1,0 @@
-bottle
-cherrypy
-google-genai
-ipykernel
-jupyter_client
-nbclient
-nbformat
-pyyaml

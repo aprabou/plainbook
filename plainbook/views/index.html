@@ -96,7 +96,7 @@
                         <!-- <button id="btn-info" class="button is-danger" @click="genError">
                             <span class="icon"><i class="fa fa-exclamation"></i></span>
                         </button> -->
-                        <button id="btn-info" class="button is-light" @click="openInfo" title="About NLBook">
+                        <button id="btn-info" class="button is-light" @click="openInfo" title="About Plainbook">
                             <span class="icon"><i class="fa fa-info"></i></span>
                         </button>
                         <button id="btn-settings" class="button is-light" @click="openSettings" title="Settings">
@@ -218,7 +218,7 @@
                     <div class="control">
                         <input class="input" type="text" v-model="geminiApiKey" placeholder="Enter your Gemini API key">
                     </div>
-                    <p class="help">Your API key is stored locally in ~/.settings/nlbook and used for AI-powered features.</p>
+                    <p class="help">Your API key is stored locally in ~/.settings/plainbook and used for AI-powered features.</p>
                 </div>
             </section>
             <footer class="modal-card-foot">
@@ -236,9 +236,9 @@
                 <button class="delete" aria-label="close" @click="closeInfo"></button>
             </header>
             <section class="modal-card-body">
-                <h1 class="title">NLBook</h1>
+                <h1 class="title">Plainbook</h1>
                 <div class="content">
-                    <p>NLBook is an interactive notebook application for creating executable doocuments in 
+                    <p>Plainbook is an interactive notebook application for creating executable doocuments in 
                         natural language.  A notebook consists of:</p>
                     <ul>
                         <li><strong>Action cells</strong> that contain an English explanation. The explanation is 
@@ -250,7 +250,7 @@
                         to prevent accidental changes.  However, you can still validate the code against
                         its description, and you can still run the notebook.
                         Unlock it to be able to edit again.</p>
-                    <p><a href="https://github.com/lucadealfaro/nlbook" target="_blank">NLBook Home Page</a></p>
+                    <p><a href="https://github.com/lucadealfaro/plainbook" target="_blank">Plainbook Home Page</a></p>
                 </div>
             </section>
             <footer class="modal-card-foot">

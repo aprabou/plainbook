@@ -13,14 +13,14 @@ from .gemini import gemini_generate_code, gemini_validate_code
 
 
 class ExecutionError(Exception):
-    """Custom exception for execution errors in LNBook."""
+    """Custom exception for execution errors in Plainbook."""
     pass
 
-class NLBook(object):
-    """This class implements an LNBook and its operations."""
+class Plainbook(object):
+    """This class implements an Plainbook and its operations."""
     
     def __init__(self, notebook_path):
-        print(f"Initializing LNBook for {notebook_path}...")
+        print(f"Initializing Plainbook for {notebook_path}...")
         self.path = notebook_path
         self.name = os.path.splitext(os.path.basename(notebook_path))[0]
         self.nb = None
