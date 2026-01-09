@@ -96,10 +96,11 @@
                         <!-- <button id="btn-info" class="button is-danger" @click="genError">
                             <span class="icon"><i class="fa fa-exclamation"></i></span>
                         </button> -->
-                        <button id="btn-info" class="button is-light" @click="openInfo" title="About Plainbook">
+                        <button id="btn-info" class="button is-light" @click="showInfo = true" title="About Plainbook">
                             <span class="icon"><i class="fa fa-info"></i></span>
                         </button>
-                        <button id="btn-settings" class="button" :class="geminiApiKey ? 'is-light' : 'is-warning'" @click="openSettings" title="Settings">
+                        <button id="btn-settings" class="button" :class="geminiApiKey ? 'is-light' : 'is-warning'" 
+                                 @click="showSettings = true" title="Settings">
                             <span class="icon"><i :class="geminiApiKey ? 'fa fa-cog' : 'fa fa-warning'"></i></span>
                             <span>Settings</span>
                         </button>
@@ -179,59 +180,17 @@
     </div>
 
     <!-- Settings Modal -->
-    <div class="modal" :class="{'is-active': showSettings}">
-        <div class="modal-background" @click="closeSettings"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Settings</p>
-                <button class="delete" aria-label="close" @click="closeSettings"></button>
-            </header>
-            <section class="modal-card-body">
-                <div class="field">
-                    <label class="label">Gemini API Key</label>
-                    <div class="control">
-                        <input class="input" type="text" v-model="geminiApiKey" placeholder="Enter your Gemini API key">
-                    </div>
-                    <p class="help">Your API key is stored locally in ~/.settings/plainbook and used for AI-powered features.</p>
-                </div>
-            </section>
-            <footer class="modal-card-foot">
-                <button class="button" @click="closeSettings">Close</button>
-            </footer>
-        </div>
-    </div>
-
+    <settings-modal 
+        :is-active="showSettings" 
+        :api-key="geminiApiKey" 
+        @close="showSettings = false" 
+        @save="(newKey) => {showSettings = false; saveSettings(newKey); }" 
+    />
     <!-- Info Modal -->
-    <div class="modal" :class="{'is-active': showInfo}">
-        <div class="modal-background" @click="closeInfo"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Information</p>
-                <button class="delete" aria-label="close" @click="closeInfo"></button>
-            </header>
-            <section class="modal-card-body">
-                <h1 class="title">Plainbook</h1>
-                <div class="content">
-                    <p>Plainbook is an interactive notebook application for creating executable doocuments in 
-                        natural language.  A notebook consists of:</p>
-                    <ul>
-                        <li><strong>Action cells</strong> that contain an English explanation. The explanation is 
-                            used to generate Python code using an AI model. The generated code is then executed, 
-                            and the output is displayed below the cell.</li>
-                        <li><strong>Markdown cells</strong> for writing explanations, comments, and documentation in rich text format.</li>
-                    </ul>
-                    <p>If you lock a notebook, editing of cells and generation of code will be disabled 
-                        to prevent accidental changes.  However, you can still validate the code against
-                        its description, and you can still run the notebook.
-                        Unlock it to be able to edit again.</p>
-                    <p><a href="https://github.com/lucadealfaro/plainbook" target="_blank">Plainbook Home Page</a></p>
-                </div>
-            </section>
-            <footer class="modal-card-foot">
-                <button class="button" @click="closeInfo">Close</button>
-            </footer>
-        </div>
-    </div>
+    <info-modal 
+        :is-active="showInfo" 
+        @close="showInfo = false" 
+    />
 
     </script>
     

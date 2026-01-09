@@ -2,9 +2,11 @@ import { createApp, ref, onMounted, onBeforeUnmount, nextTick, getCurrentInstanc
 
 import NotebookCell from './NotebookCell.js';
 import CellInsertionZone from './CellInsertionZone.js';
+import SettingsModal from './SettingsModal.js';
+import InfoModal from './InfoModal.js';
 
 createApp({
-    components: { NotebookCell, CellInsertionZone },
+    components: { NotebookCell, CellInsertionZone, SettingsModal, InfoModal },
     setup() {
         // Extract token from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -458,13 +460,7 @@ createApp({
             }
         };
 
-        const openSettings = () => {
-            // Get the Gemini API key from the server settings.
-            
-            showSettings.value = true;
-        };
-
-        const closeSettings = async () => {
+        const saveSettings = async (newKey) => {
             // Save the Gemini API key to the server
             try {
                 const response = await fetch(`/set_key?token=${authToken}`, {
@@ -480,20 +476,12 @@ createApp({
             } catch (err) {
                 throw new Error('Error saving API key: ' + err.message);
             }
-            showSettings.value = false;
+            geminiApiKey.value = newKey;
         };
 
         const genError = () => {
             throw new Error('This is a generated error for testing purposes. This is a generated error for testing purposes. This is a generated error for testing purposes. This is a generated error for testing purposes. ');
         }
-
-        const openInfo = () => {
-            showInfo.value = true;
-        };
-
-        const closeInfo = () => {
-            showInfo.value = false;
-        };
 
         const closeUiError = () => {
             uiError.value = null;
@@ -525,8 +513,7 @@ createApp({
             validateCode, dismissValidation, resetAndRunAllCells,
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, insertCell, markdownEditKey, 
-            openSettings, closeSettings, showSettings, 
-            openInfo, closeInfo, showInfo, 
+            saveSettings, showSettings, showInfo, 
             genError, uiError, closeUiError,
             explanationEditKey, deleteCell, moveCell, geminiApiKey };
     },
