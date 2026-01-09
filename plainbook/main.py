@@ -183,7 +183,8 @@ def execute_cell():
     print(f"Executing cell {cell_index}")
     try:
         outputs, details = notebook.execute_cell(cell_index)
-        return dict(status="ok", details=details, outputs=outputs, last_executed_cell=notebook.last_executed_cell)
+        return dict(status="ok", details=details, 
+                    outputs=outputs, last_executed_cell=notebook.last_executed_cell)
     except CellExecutionError as e:
         # The execution error is already captured in the cell outputs. 
         return dict(status="ok", details="CellExecutionError", 

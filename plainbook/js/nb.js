@@ -395,6 +395,8 @@ createApp({
                 const r = await response.json();
                 if (r.status === 'error') {
                     throw new Error(r.message || 'Execution failed');
+                } else if (r.details !== 'ok') {
+                    throw new Error('Cell execution error');
                 } else {
                     console.log('Cell executed:', cellIndex, r.details);
                     // Update outputs in the notebook model
@@ -405,9 +407,11 @@ createApp({
                     if (r.last_executed_cell !== undefined && r.last_executed_cell !== null) {
                         lastRunIndex.value = r.last_executed_cell;
                     }
+                    // 
                 }
             } catch (err) {
-                throw new Error('Run error: ' + err.message);
+                running.value = false; // No longer running.
+                throw new Error(err.message);
             }
         };
 
