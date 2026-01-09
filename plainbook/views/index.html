@@ -135,13 +135,10 @@
                 </div>
 
                 <template v-for="(cell, index) in notebook.cells" :key="index">
-                    <!-- Insert zone before each cell -->
-                    <div v-if="!isLocked" class="cell-insert-zone">
-                        <div class="cell-insert-buttons">
-                            <button class="button insert-cell is-info is-small py-0 px-3" @click.stop="insertCell(index, 'markdown')">Insert Comment</button>
-                            <button class="button insert-cell is-info is-small py-0 px-3" @click.stop="insertCell(index, 'code')">Insert Action</button>
-                        </div>
-                    </div>
+
+                    <cell-insertion-zone v-if="!isLocked"
+                        @insert="(celltype) => insertCell(index, celltype)" 
+                    />
 
                     <notebook-cell 
                         :cell="cell"
@@ -172,12 +169,11 @@
                 </template>
                 
                 <!-- Insert zone after the last cell -->
-                <div v-if="!isLocked && !notebook.cells.length > 0" class="cell-insert-zone">
-                    <div class="cell-insert-buttons">
-                        <button class="button insert-cell is-info is-small py-0 px-3" @click.stop="insertCell(notebook.cells.length, 'markdown')">Insert Comment</button>
-                        <button class="button insert-cell is-info is-small py-0 px-3" @click.stop="insertCell(notebook.cells.length, 'code')">Insert Action</button>
-                    </div>
-                </div>
+
+                <cell-insertion-zone v-if="!isLocked && !notebook.cells.length > 0""
+                    @insert="(celltype) => insertCell(notebook.cells.length, celltype)" 
+                />
+
             </div>
         </div>
     </div>

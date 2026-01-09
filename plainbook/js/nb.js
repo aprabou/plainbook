@@ -1,9 +1,10 @@
 import { createApp, ref, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from './vue.esm-browser.js';
 
 import NotebookCell from './NotebookCell.js';
+import CellInsertionZone from './CellInsertionZone.js';
 
 createApp({
-    components: { NotebookCell },
+    components: { NotebookCell, CellInsertionZone },
     setup() {
         // Extract token from URL
         const urlParams = new URLSearchParams(window.location.search);
