@@ -70,16 +70,12 @@
                 <strong>Error:</strong> {{ error }}
             </div>
             <div v-else="notebook">
-                <div v-if="!isLocked && notebook.cells.length === 0" class="py-1" style="display:flex; justify-content:center; gap:0.5rem;">
-                    <button class="button insert-cell is-info is-small py-0 px-3" @click.stop="insertCell(0, 'markdown')">Insert Comment</button>
-                    <button class="button insert-cell is-info is-small py-0 px-3" @click.stop="insertCell(0, 'code')">Insert Action</button>
-                </div>
+
+                <cell-insertion-zone v-if="!isLocked"
+                    @insert="(celltype) => insertCell(0, celltype)" 
+                />
 
                 <template v-for="(cell, index) in notebook.cells" :key="index">
-
-                    <cell-insertion-zone v-if="!isLocked"
-                        @insert="(celltype) => insertCell(index, celltype)" 
-                    />
 
                     <notebook-cell 
                         :cell="cell"
@@ -107,14 +103,12 @@
                         @move-down="moveCell(index, 1)"
                     />
 
+                    <cell-insertion-zone v-if="!isLocked"
+                        @insert="(celltype) => insertCell(index + 1, celltype)" 
+                    />
+
                 </template>
                 
-                <!-- Insert zone after the last cell -->
-
-                <cell-insertion-zone v-if="!isLocked && !notebook.cells.length > 0""
-                    @insert="(celltype) => insertCell(notebook.cells.length, celltype)" 
-                />
-
             </div>
         </div>
     </div>
