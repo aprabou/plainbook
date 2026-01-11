@@ -50,11 +50,10 @@
         @open-settings="showSettings = true"
     />    
 
-    <div v-if="uiError" class="notification mb-0 mt-0 px-4 pl-2 pr-6 has-text-danger has-background-danger-light" 
-        style="width: 100%; border-radius: 0; align-items: center; justify-content: space-between;">
-        <span><strong>Error:</strong> {{ uiError }}</span>
-        <button class="delete" @click="closeUiError"></button>
-    </div>
+    <ui-error 
+        :error="uiError" 
+        @close="closeUiError" 
+    />
 
     <div class="section notebook-area">
         <h1 class="title">
