@@ -76,6 +76,8 @@ createApp({
 
         const sendExplanationToServer = async (content, cellIndex) => {
             asRead.value = false;
+            const cell = notebook.value.cells[cellIndex];
+            cell.metadata.codegen = false;
             try {
                 const response = await fetch(`/edit_explanation?token=${authToken}`, {
                     method: 'POST',
@@ -114,6 +116,8 @@ createApp({
 
         const sendCodeToServer = async (content, cellIndex) => {
             asRead.value = false;
+            const cell = notebook.value.cells[cellIndex];
+            cell.metadata.codegen = false;
             try {
                 const response = await fetch(`/edit_code?token=${authToken}`, {
                     method: 'POST',
@@ -171,7 +175,9 @@ createApp({
                 }
                 lastRunIndex.value = r.last_executed_cell;
                 if (notebook.value && notebook.value.cells[cellIndex]) {
-                    notebook.value.cells[cellIndex].source = r.code;
+                    const cell = notebook.value.cells[cellIndex];
+                    cell.source = r.code;
+                    cell.metadata.codegen = true;
                     console.log('Code generated for cell:', cellIndex);
                 }
             } catch (err) {

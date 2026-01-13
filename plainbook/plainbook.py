@@ -247,6 +247,7 @@ class Plainbook(object):
             else:
                 new_cell = nbformat.v4.new_code_cell(source="", execution_count=None, outputs=[])
                 new_cell.metadata['explanation'] = []
+                new_cell.metadata['codegen'] = False
             self.nb.cells.insert(index, new_cell)
             # Inserting code cells before the last executed cell requires resetting the kernel.
             if cell_type == 'code' and index <= self.last_executed_cell:
@@ -298,10 +299,12 @@ class Plainbook(object):
         """Sets the source code of a cell at the given index."""
         with self._lock:
             assert 0 <= index < len(self.nb.cells)
-            self.nb.cells[index].source = source
-            if self.nb.cells[index].cell_type == 'code':
+            cell = self.nb.cells[index]
+            cell.source = source
+            if cell.cell_type == 'code':
+                cell.metadata['codegen'] = False
                 # Reset outputs and execution count on code cell edit
-                self.nb.cells[index].outputs = []
+                cell.outputs = []
                 if index <= self.last_executed_cell:
                     # We need to restart. 
                     self._reset_kernel()
@@ -314,6 +317,7 @@ class Plainbook(object):
             cell = self.nb.cells[index]
             assert cell.cell_type == 'code'
             cell.metadata['explanation'] = explanation
+            cell.metadata['codegen'] = False
             self._write()
             
     # Methods to support AI
@@ -356,14 +360,15 @@ class Plainbook(object):
                 # If we are still in a request, update the cell.
                 if self.ai_request_pending:
                     cell.source = new_code
+                    cell.metadata['codegen'] = True
                     # Reset outputs and execution count
                     cell.outputs = []
                     if index <= self.last_executed_cell:
                         self._reset_kernel()
                     self._write()
-                    return new_code
+                    return new_code, True
                 else:
-                    return None
+                    return None, False
             finally:
                 self.ai_request_pending = False
 
