@@ -33,7 +33,7 @@ export default {
                 @moveDown="$emit('move-down')" />
 
             <div v-else-if="cell.cell_type === 'code'">
-                <div v-if="cell.metadata?.explanation" class="has-background-light p-0 border-bottom">
+                <div class="has-background-light p-0 border-bottom">
                     <explanation-editor 
                         v-model:source="cell.metadata.explanation" 
                         :isActive="isActive" 
