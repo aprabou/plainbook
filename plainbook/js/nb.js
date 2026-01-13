@@ -6,9 +6,10 @@ import CellInsertionZone from './CellInsertionZone.js';
 import SettingsModal from './SettingsModal.js';
 import InfoModal from './InfoModal.js';
 import UiError from './UiError.js';
+import InputFile from './InputFile.js';
 
 createApp({
-    components: { AppNavbar, NotebookCell, CellInsertionZone, SettingsModal, InfoModal, UiError },
+    components: { AppNavbar, NotebookCell, CellInsertionZone, SettingsModal, InfoModal, UiError, InputFile },
     setup() {
         // Extract token from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -512,7 +513,7 @@ createApp({
         });
 
         return { notebook, notebook_name, loading, error, isLocked, lockNotebook,
-            sendExplanationToServer, 
+            sendExplanationToServer, authToken,
             sendCodeToServer, saveExplanationAndRun,
             sendMarkdownToServer, generateCode, activeIndex, reloadNotebook,
             regenerateAllCode, regenerateAndRunAllCode,

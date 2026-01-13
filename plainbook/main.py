@@ -25,6 +25,7 @@ TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
 app_path = Path(APP_FOLDER)
 PARENT_FOLDER = app_path.parent
 TEST_INPUTS = os.path.join(PARENT_FOLDER, "tests/files")
+ROOT_DIR = os.path.abspath(os.sep)
 
 # Configuration file, the 'Good Citizen' way
 APP_NAME = "plainbook"
@@ -266,7 +267,39 @@ def lock_notebook():
     notebook.lock(is_locked)
     return dict(status='success')
 
+@get('/home-dir')
+@require_token
+def get_home_dir():
+    """Returns the absolute path of the current user's home directory."""
+    return {"path": str(Path.home())}
 
+@post('/file-list')
+@require_token
+def file_list():
+    # 1. Get the path from the request body
+    data = request.json
+    requested_path = data.get('path', ROOT_DIR)    
+    abs_path = os.path.abspath(requested_path)
+    if not os.path.exists(abs_path):
+        raise HTTPError(404, 'Path does not exist')
+    if not os.path.isdir(abs_path):
+        raise HTTPError(400, 'Path is not a directory')
+    try:
+        results = []
+        for entry in os.scandir(abs_path):
+            if not entry.name.startswith('.'):  # Skip hidden files
+                # We gather name, full path, and determine if it's a file or dir
+                results.append({
+                    "name": entry.name,
+                    "path": entry.path,
+                    "type": "directory" if entry.is_dir() else "file"
+                })
+        # Sort: Directories first, then files alphabetically
+        results.sort(key=lambda x: (x['type'] != 'directory', x['name'].lower()))
+        return {"files": results} # Returning a list wrapped in a dict is a best practice
+
+    except PermissionError:
+        raise HTTPError(403, 'Permission denied')
 
 
 ################################

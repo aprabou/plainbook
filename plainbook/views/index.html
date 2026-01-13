@@ -50,6 +50,10 @@
         @open-settings="showSettings = true"
     />    
 
+    <input-file 
+        :auth-token="authToken"
+    />
+
     <ui-error 
         :error="uiError" 
         @close="closeUiError" 
@@ -69,7 +73,6 @@
                 <strong>Error:</strong> {{ error }}
             </div>
             <div v-else="notebook">
-
                 
                 <template v-for="(cell, index) in notebook.cells" :key="index">
 
