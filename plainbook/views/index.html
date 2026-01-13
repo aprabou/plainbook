@@ -112,7 +112,7 @@
                 
                 <cell-insertion-zone v-if="!isLocked"
                     :is-last="true"
-                    @insert="(celltype) => insertCell(index + 1, celltype)" 
+                    @insert="(celltype) => insertCell(notebook.cells.length, celltype)" 
                 />
 
             </div>

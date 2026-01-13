@@ -245,6 +245,7 @@ createApp({
 
         const insertCell = async (position, cellType) => {
             asRead.value = false;
+            console.log("Inserting cell at", position, "of type", cellType);
             try {
                 const response = await fetch(`/insert_cell?token=${authToken}`, {
                     method: 'POST',
