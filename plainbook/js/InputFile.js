@@ -1,9 +1,9 @@
-import { ref, reactive, onMounted, computed } from './vue.esm-browser.js';
+import { ref, reactive, onMounted, computed, watch } from './vue.esm-browser.js';
 
 export default {
     props: ['authToken'],
     setup(props) {
-        const isCollapsed = ref(false);
+        const isCollapsed = ref(true);
         const currentPath = ref('/'); // Root path
         const fileList = ref([]);     // Files in the current directory
         const selectedFiles = reactive(new Map()); // Path -> File object mapping
@@ -103,11 +103,10 @@ export default {
         <div class="input-file-wrapper" style="background-color: #f5f5f5; border: 1px solid #dbdbdb; border-radius: 4px;">
             <button style="width: 100%; text-align: left; background: transparent; border: none; padding: 0.75rem; cursor: pointer;"
                     @click="toggleCollapse">
-                {{ isCollapsed ? '▶ &nbsp;Show Input Files' : '▼ &nbsp;Hide Input Files' }}
+                {{ isCollapsed ? '▶ &nbsp;Select Input Files' : '▼ &nbsp;You can mention selected files by name in the plainbook, the code generator will know where to find them.' }}
             </button>
 
             <div v-if="!isCollapsed" style="display: flex; border-top: 1px solid #dbdbdb; height: 400px; background: white;">
-                
                 <div style="flex: 1; border-right: 1px solid #dbdbdb; display: flex; flex-direction: column;">
                     <div style="padding: 8px; background: #eee; display: flex; gap: 8px;">
                         <input type="text" v-model="filterQuery" placeholder="Filter files..." 
