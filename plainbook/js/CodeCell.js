@@ -6,7 +6,7 @@ export default {
     setup(props, { emit }) {
         const isCollapsed = ref(true);
         const isEditing = ref(false);
-        const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source);
+        const localSource = ref((Array.isArray(props.source) ? props.source.join('') : props.source) || '');
         const originalSource = ref(localSource.value);
         const textareaEl = ref(null);
         const localIsLocked = ref(props.isLocked);
@@ -18,7 +18,7 @@ export default {
         });
 
         watch(() => props.source, (val) => {
-            localSource.value = Array.isArray(val) ? val.join('') : val;
+            localSource.value = (Array.isArray(val) ? val.join('') : val) || '';
             nextTick(autoResize);
         });
 

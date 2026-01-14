@@ -6,7 +6,7 @@ const ExplanationRenderer = {
             'run', 'delete', 'moveUp', 'moveDown'],
     setup(props, { emit }) {    
         const isEditing = ref(false);
-        const localSource = ref(Array.isArray(props.source) ? props.source.join('') : props.source);
+        const localSource = ref((Array.isArray(props.source) ? props.source.join('') : props.source) || '');
         const originalSource = ref(localSource.value);
         const md = new markdownit({ html: true });
         const textareaEl = ref(null);
@@ -27,7 +27,7 @@ const ExplanationRenderer = {
 
         // keep local copy in sync if parent changes
         watch(() => props.source, (val) => {
-            localSource.value = Array.isArray(val) ? val.join('') : val;
+            localSource.value = (Array.isArray(val) ? val.join('') : val) || '';
             nextTick(autoResize);
         });
 
