@@ -44,7 +44,7 @@ INSTRUCTIONS for New Cell:
 Code:
 """
 
-    print("Prompt:", prompt)
+    # print("Prompt:", prompt)
 
     # 3. Generate content
     # Note: System instructions are now passed inside the config argument
@@ -65,7 +65,7 @@ Code:
         code = code[len("```python"):].strip()
     if code.endswith("```"):
         code = code[:-3].strip()
-    print("Generated Code:", code)
+    # print("Generated Code:", code)
     return code
 
 # Usage
