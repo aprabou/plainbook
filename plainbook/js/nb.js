@@ -415,7 +415,11 @@ createApp({
                 if (r.details !== 'ok') {
                     // The cell executed, but we have to stop other further
                     // cells from executing.
-                    throw new Error('Cell execution error');
+                    if(r.outputs[0].ename === 'ModuleNotFoundError') {
+                        throw new Error('A package is required by this code cell. Please install the necessary packages via this command on your local environment and restart the app: pip install ' + r.outputs[0].evalue.split("'")[1]);
+                    } else {
+                        throw new Error('Execution halted at cell ' + cellIndex + ': ' + r.outputs[0].ename);
+                    }
                 } else {
                     // Update lastRunIndex from server response
                     if (r.last_executed_cell !== undefined && r.last_executed_cell !== null) {
