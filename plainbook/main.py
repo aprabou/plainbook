@@ -217,19 +217,16 @@ def generate_code_cell():
     gemini_api_key = settings.get('gemini_api_key')
     if not gemini_api_key:
         return dict(status='error', message='Gemini API key not set.')
-    try:
-        new_code, success = notebook.generate_code_cell(gemini_api_key, cell_index)
-        if success:
-            return dict(status='success', 
-                        code=new_code,
-                        last_executed_cell=notebook.last_executed_cell)
-        else:
-            # The request was cancelled, we need to avoid updating the code.
-            return dict(status='cancelled',
-                        code=None,
-                        last_executed_cell=notebook.last_executed_cell)
-    except Exception as e:
-        return dict(status='error', message=str(e))
+    new_code, success = notebook.generate_code_cell(gemini_api_key, cell_index)
+    if success:
+        return dict(status='success', 
+                    code=new_code,
+                    last_executed_cell=notebook.last_executed_cell)
+    else:
+        # The request was cancelled, we need to avoid updating the code.
+        return dict(status='cancelled',
+                    code=None,
+                    last_executed_cell=notebook.last_executed_cell)
     
 @post('/validate_code')
 @require_token
@@ -239,13 +236,10 @@ def validate_code_cell():
     gemini_api_key = settings.get('gemini_api_key')
     if not gemini_api_key:
         return dict(status='error', message='Gemini API key not set.')
-    try:
-        validation_result = notebook.validate_code_cell(gemini_api_key, cell_index)
-        return dict(status='success', 
-                    validation=validation_result,
-                    last_executed_cell=notebook.last_executed_cell)
-    except Exception as e:
-        return dict(status='error', message=str(e))
+    validation_result = notebook.validate_code_cell(gemini_api_key, cell_index)
+    return dict(status='success', 
+                validation=validation_result,
+                last_executed_cell=notebook.last_executed_cell)
 
 @post('/set_validation_visibility')
 @require_token

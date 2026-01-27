@@ -24,34 +24,53 @@ followed by a brief explanation.
 def clean_start(text):
     return re.sub(SPACES_AND_PUNCTUATION_PATTERN, '', text)
 
-def gemini_generate_code(
-    api_key, previous_code=None, instructions=None,
-    file_context=None, error_context=None):
-    # 1. Initialize the Client
-    # The new SDK uses a centralized client for all model interactions
-    client = genai.Client(api_key=api_key)
-    
-    # 2. Create the prompt
+def build_context_prompt(
+    previous_code=None,
+    file_context=None, 
+    error_context=None,
+    variable_context=None):
     prompt = f"""
 CONTEXT (Existing Notebook Code):
 {previous_code}
 
-"""
-    
+""" 
     if error_context:
         prompt += f"""
 ERROR CONTEXT:
 {error_context}
 
 """
-
     if file_context:
         prompt += f"""
 FILE CONTEXT:
 {file_context}
 
-"""    
+"""
+    if variable_context:
+        prompt += f"""
+VARIABLE CONTEXT (Variables currently in memory):
+{variable_context}
 
+"""
+    return prompt
+
+
+def gemini_generate_code(
+    api_key, 
+    previous_code=None,
+    instructions=None,
+    file_context=None, 
+    error_context=None,
+    variable_context=None):
+    # 1. Initialize the Gemini client
+    client = genai.Client(api_key=api_key)
+    
+    # 2. Create the prompt
+    prompt = build_context_prompt(
+        previous_code=previous_code,
+        file_context=file_context,
+        error_context=error_context,
+        variable_context=variable_context)
     prompt += f"""    
 INSTRUCTIONS for New Cell:
 {instructions}
@@ -59,7 +78,7 @@ INSTRUCTIONS for New Cell:
 Code:
 """
 
-    # print("Prompt:", prompt)
+    print("Prompt:", prompt)
 
     # 3. Generate content
     # Note: System instructions are now passed inside the config argument
@@ -70,7 +89,7 @@ Code:
             system_instruction=SYSTEM_INSTRUCTIONS
         )
     )
-
+    print("Response:", response.text)
     # 4. Process the response
     # We need to strip the ```python ` and trailing ```
     # There is no simple way to get gemini not add this :-) 
@@ -86,12 +105,13 @@ Code:
 # new_code = generate_notebook_cell(api_key, previous_code, "Plot a sine wave with numpy")
 
 
-def gemini_validate_code(api_key, previous_code, code_to_validate, instructions):
+def gemini_validate_code(api_key, previous_code, code_to_validate, instructions, variable_context=None):
     client = genai.Client(api_key=api_key)
-    
-    prompt = f"""
-CONTEXT (Existing Notebook Code):
-{previous_code}
+    prompt = build_context_prompt(
+        previous_code=previous_code,
+        variable_context=variable_context
+    )
+    prompt += f"""
 
 CODE TO VALIDATE:
 {code_to_validate}

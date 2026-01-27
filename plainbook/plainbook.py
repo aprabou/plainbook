@@ -1,5 +1,6 @@
 import atexit
 import asyncio
+import json
 import os
 import threading
 
@@ -35,22 +36,40 @@ def tostring(value):
     
 VARIABLE_INSPECTION_CODE = """
 import json
-import pandas as pd
+import types
 
-var_info = {}
-# Filter out internal/private variables
-for name in [v for v in dir() if not v.startswith('_')]:
-    obj = globals()[name]
-    info = {"type": str(type(obj))}
-    
-    # Add specific details for Pandas DataFrames
-    if isinstance(obj, pd.DataFrame):
-        info["columns"] = obj.columns.tolist()
-        info["shape"] = obj.shape
-    
-    var_info[name] = info
+def _get_var_info():
+    pd = None
+    try: import pandas as pd
+    except: pass
+    np = None
+    try: import numpy as np
+    except: pass
 
-print(json.dumps(var_info))
+    var_info = {}
+    for name, obj in list(globals().items()):
+        if name.startswith('_') or isinstance(obj, types.ModuleType) or \
+           isinstance(obj, types.FunctionType) or name == 'VARIABLE_INSPECTION_CODE':
+            continue
+        try:
+            info = {"type": type(obj).__name__}
+            if pd and isinstance(obj, pd.DataFrame):
+                info["columns"] = [{"name": str(c), "dtype": str(d)} for c, d in obj.dtypes.items()]
+                info["shape"] = obj.shape
+            elif pd and isinstance(obj, pd.Series):
+                info["dtype"] = str(obj.dtype)
+                info["len"] = len(obj)
+            elif np and isinstance(obj, np.ndarray):
+                info["shape"] = obj.shape
+                info["dtype"] = str(obj.dtype)
+            elif hasattr(obj, '__len__') and not isinstance(obj, (str, bytes)):
+                info["len"] = len(obj)
+            var_info[name] = info
+        except:
+            continue
+    return var_info
+
+print(json.dumps(_get_var_info()))
 """
 
     
@@ -402,32 +421,48 @@ class Plainbook(object):
             return "\n"
         
     def _get_variables_for_ai(self):
-        """Returns the list of currently defined variables in the kernel."""
-
-        # Execute the inspection code and capture output
-        # We use the internal kernel client (kc) to run the code
+        """Returns a formatted text summary of variables in the kernel for AI context."""
         self._heal_client()
         self.client.kc.execute(VARIABLE_INSPECTION_CODE)
-        # Wait for the reply and grab the 'stream' output (STDOUT)
-        while True:
-            msg = self.client.kc.get_iopub_msg()
-            if msg['msg_type'] == 'stream' and msg['content']['name'] == 'stdout':
-                result_json = msg['content']['text']
-                break
-            if msg['msg_type'] == 'status' and msg['content']['execution_state'] == 'idle':
-                break
+        
+        result_json = ""
+        try:
+            while True:
+                msg = self.client.kc.get_iopub_msg(timeout=5)
+                if msg['msg_type'] == 'stream' and msg['content']['name'] == 'stdout':
+                    result_json += msg['content']['text']
+                if msg['msg_type'] == 'status' and msg['content']['execution_state'] == 'idle':
+                    break
+        except Exception:
+            pass
 
-        # 5. Parse and view your variables
-        return result_json
-        # import json
-        # variables = json.loads(result_json)
-        # return variables
-        # for name, details in variables.items():
-        #     print(f"Variable: {name}")
-        #     print(f"  Type: {details['type']}")
-        #     if 'columns' in details:
-        #         print(f"  Columns: {details['columns']}")
-        #     print("-" * 20)
+        try:
+            variables = json.loads(result_json)
+        except (json.JSONDecodeError, TypeError):
+            return ""
+
+        if not variables:
+            return "No variables are currently defined in the kernel."
+
+        lines = ["VARIABLES IN KERNEL:"]
+        for name, info in variables.items():
+            v_type = info.get('type', 'unknown')
+            details = []
+            if 'shape' in info:
+                details.append(f"shape: {info['shape']}")
+            elif 'len' in info:
+                details.append(f"length: {info['len']}")
+            if 'dtype' in info:
+                details.append(f"dtype: {info['dtype']}")
+            
+            summary = f"- {name} ({v_type}" + (f", {', '.join(details)}" if details else "") + ")"
+            lines.append(summary)
+            
+            if 'columns' in info:
+                for col in info['columns']:
+                    lines.append(f"  * {col['name']} ({col['dtype']})")
+        
+        return "\n".join(lines)
 
 
     def _get_code_for_ai(self, index):
@@ -438,21 +473,23 @@ class Plainbook(object):
     def generate_code_cell(self, api_key, index):
         """Generates code for the cell at index using Gemini."""
         with self._lock:
-            if self.ai_request_pending:
-                raise RuntimeError("An AI request is already pending.")
-            self.ai_request_pending = True
             assert 0 <= index < len(self.nb.cells)
             cell = self.nb.cells[index]
             assert cell.cell_type == 'code'
             instructions = cell.metadata.get('explanation')
             files_context = self._get_files_context()
             error_context = self._get_error_context(index)
+            variable_context = self._get_variables_for_ai()
             previous_code = self._get_code_for_ai(index)
             # Mark that an AI request is pending
+            if self.ai_request_pending:
+                raise RuntimeError("An AI request is already pending.")
+            self.ai_request_pending = True
             try:
                 new_code = gemini_generate_code(
                     api_key, previous_code=previous_code, instructions=instructions,
-                    file_context=files_context, error_context=error_context)
+                    file_context=files_context, error_context=error_context,
+                    variable_context=variable_context)
                 # If we are still in a request, update the cell.
                 if self.ai_request_pending:
                     cell.source = new_code
@@ -485,8 +522,10 @@ class Plainbook(object):
             code_to_validate = cell.source
             instructions = cell.metadata.get('explanation')
             previous_code = self._get_code_for_ai(index)
+            variable_context = self._get_variables_for_ai()
             try:
-                validation_result = gemini_validate_code(api_key, previous_code, code_to_validate, instructions)
+                validation_result = gemini_validate_code(api_key, previous_code, code_to_validate, 
+                                                         instructions, variable_context=variable_context)
                 # For uniformity, usesless to have the various AI code take care of this.
                 validation_result['is_hidden'] = False
                 cell.metadata['validation'] = validation_result
