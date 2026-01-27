@@ -54,7 +54,7 @@ AUTH_TOKEN = "secret" if args.debug else secrets.token_hex(32)
                     
 notebook_path = os.path.abspath(args.notebook)
     
-notebook = Plainbook(notebook_path)
+notebook = Plainbook(notebook_path, debug=args.debug)
 assert notebook.kc is not None
 assert notebook.km.is_alive()
                     
@@ -94,7 +94,8 @@ def get_notebook():
         nb=notebook.get_json(),
         nb_name=os.path.basename(notebook_path),
         last_executed_cell=notebook.last_executed_cell,
-        gemini_api_key=settings.get('gemini_api_key')
+        gemini_api_key=settings.get('gemini_api_key'),
+        debug=args.debug
     )
 
 @post('/set_key')
@@ -267,13 +268,13 @@ def lock_notebook():
     notebook.lock(is_locked)
     return dict(status='success')
 
-@get('/home-dir')
+@get('/home_dir')
 @require_token
 def get_home_dir():
     """Returns the absolute path of the current user's home directory."""
     return {"path": str(Path.home())}
 
-@post('/file-list')
+@post('/file_list')
 @require_token
 def file_list():
     # 1. Get the path from the request body
@@ -301,7 +302,7 @@ def file_list():
     except PermissionError:
         raise HTTPError(403, 'Permission denied')
     
-@post('/set-files')
+@post('/set_files')
 @require_token
 def set_files():
     data = request.json
@@ -310,11 +311,20 @@ def set_files():
     notebook.set_input_files(files, missing_files)
     return dict(status='success')
 
-@get('/get-files')
+@get('/get_files')
 @require_token
 def get_files():
     d = notebook.get_input_files()
     return dict(files=d['input_files'], missing_files=d['missing_input_files'])
+
+@post('/debug_request')
+@require_token
+def debug_request():
+    try:
+        notebook.debug_request()
+        return dict(status='success')
+    except Exception as e:
+        return dict(status='error', message=str(e))
 
 
 ################################

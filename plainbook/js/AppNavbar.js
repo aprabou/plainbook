@@ -1,9 +1,9 @@
 export default {
-    props: ['isLocked', 'running', 'hasNotebook', 'lastRunIndex', 'cellCount', 'hasApiKey'],
+    props: ['isLocked', 'running', 'hasNotebook', 'lastRunIndex', 'cellCount', 'hasApiKey', 'debug'],
     emits: [
         'lock', 'refresh', 'interrupt', 'regenerate-all', 
         'reset-run-all', 'open-info', 'open-settings'
-    ],
+        ],
     template: /* html */ `
     <nav class="navbar is-dark is-fixed-top" role="navigation" aria-label="main navigation">
         <div id="the-navbar-menu" class="navbar-menu">
@@ -60,6 +60,10 @@ export default {
             <div class="navbar-end">
                 <div class="navbar-item">
                     <div class="buttons">
+                        <button v-if="debug" class="button is-warning" title="Send debug request" @click="$emit('debug-request')">
+                            <span class="icon"><i class="fa fa-bug"></i></span>
+                            <span>Debug</span>
+                        </button>
                         <button class="button is-light" @click="$emit('open-info')" title="About Plainbook">
                             <span class="icon"><i class="fa fa-info"></i></span>
                         </button>

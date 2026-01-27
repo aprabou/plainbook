@@ -25,6 +25,7 @@ createApp({
         const markdownEditKey = ref({});
         const explanationEditKey = ref({});
         const isLocked = ref(false);
+        const debug = ref(false);
 
         // Configure global error handler
         const app = getCurrentInstance().appContext.app;
@@ -56,6 +57,7 @@ createApp({
                 notebook_name.value = r.nb_name;
                 lastRunIndex.value = r.last_executed_cell || -1;
                 geminiApiKey.value = r.gemini_api_key || '';
+                debug.value = r.debug || false;
                 isLocked.value = r.nb?.metadata?.is_locked || false;
             } catch (err) {
                 error.value = err.message;
@@ -72,6 +74,19 @@ createApp({
 
         const bumpKey = (dictRef, idx) => {
             dictRef.value = { ...dictRef.value, [idx]: (dictRef.value[idx] || 0) + 1 };
+        };
+
+        const sendDebugRequest = async () => {
+            try {
+                const response = await fetch(`/debug_request?token=${authToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) throw new Error('Failed to send debug request');
+                console.log('Debug request sent');
+            } catch (err) {
+                throw new Error('Debug request error: ' + err.message);
+            }
         };
 
         const sendExplanationToServer = async (content, cellIndex) => {
@@ -538,7 +553,7 @@ createApp({
             setActiveCell, runCell, running, lastRunIndex, asRead, runAllCells, 
             interruptKernel, insertCell, markdownEditKey, 
             saveSettings, showSettings, showInfo, 
-            genError, uiError, closeUiError,
+            genError, uiError, closeUiError, debug, sendDebugRequest,
             explanationEditKey, deleteCell, moveCell, geminiApiKey };
     },
 template: `#app-template`,

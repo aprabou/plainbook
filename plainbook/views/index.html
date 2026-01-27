@@ -41,6 +41,7 @@
         :last-run-index="lastRunIndex"
         :cell-count="notebook ? notebook.cells.length : 0"
         :has-api-key="!!geminiApiKey"
+        :debug="debug"
         @lock="lockNotebook"
         @refresh="reloadNotebook"
         @interrupt="interruptKernel"
@@ -48,6 +49,7 @@
         @reset-run-all="resetAndRunAllCells"
         @open-info="showInfo = true"
         @open-settings="showSettings = true"
+        @debug-request="sendDebugRequest"
     />    
 
     <input-file 

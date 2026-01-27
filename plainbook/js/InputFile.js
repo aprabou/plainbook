@@ -20,7 +20,7 @@ export default {
             isLoading.value = true;
             filterQuery.value = ''; // Reset search when changing folders
             try {
-                const response = await fetch(`/file-list?token=${props.authToken}`, {
+                const response = await fetch(`/file_list?token=${props.authToken}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ path: path })
@@ -67,7 +67,7 @@ export default {
         const syncSelectedFiles = async () => {
             // Convert Map values to a plain array of file objects
             try {
-                await fetch(`/set-files?token=${props.authToken}`, {
+                await fetch(`/set_files?token=${props.authToken}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -88,7 +88,7 @@ export default {
         // Load selected files mapping from server and populate `selectedFiles`
         const loadSelectedFiles = async () => {
             try {
-                const res = await fetch(`/get-files?token=${props.authToken}`);
+                const res = await fetch(`/get_files?token=${props.authToken}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 // Clear existing selection and repopulate
@@ -108,7 +108,7 @@ export default {
         // Get home dir on load
         const initialize = async () => {
             try {
-                const res = await fetch(`/home-dir?token=${props.authToken}`);
+                const res = await fetch(`/home_dir?token=${props.authToken}`);
                 const data = await res.json();
                 await fetchFiles(data.path);
                 await loadSelectedFiles();

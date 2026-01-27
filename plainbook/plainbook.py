@@ -76,9 +76,10 @@ print(json.dumps(_get_var_info()))
 class Plainbook(object):
     """This class implements an Plainbook and its operations."""
     
-    def __init__(self, notebook_path):
+    def __init__(self, notebook_path, debug=False):
         print(f"Initializing Plainbook for {notebook_path}...")
         self.path = notebook_path
+        self.debug = debug
         self.name = os.path.splitext(os.path.basename(notebook_path))[0]
         self.nb = None
         self._lock = threading.Lock()
@@ -463,7 +464,10 @@ class Plainbook(object):
                     lines.append(f"  * {col['name']} ({col['dtype']})")
         
         return "\n".join(lines)
-
+    
+    
+    def debug_request(self):
+        print(self._get_variables_for_ai())
 
     def _get_code_for_ai(self, index):
         """Returns the concatenated source code of all previous code cells for context."""
@@ -484,12 +488,13 @@ class Plainbook(object):
             # Mark that an AI request is pending
             if self.ai_request_pending:
                 raise RuntimeError("An AI request is already pending.")
-            self.ai_request_pending = True
             try:
+                self.ai_request_pending = True
                 new_code = gemini_generate_code(
                     api_key, previous_code=previous_code, instructions=instructions,
                     file_context=files_context, error_context=error_context,
-                    variable_context=variable_context)
+                    variable_context=variable_context, 
+                    debug=self.debug)
                 # If we are still in a request, update the cell.
                 if self.ai_request_pending:
                     cell.source = new_code
@@ -525,7 +530,8 @@ class Plainbook(object):
             variable_context = self._get_variables_for_ai()
             try:
                 validation_result = gemini_validate_code(api_key, previous_code, code_to_validate, 
-                                                         instructions, variable_context=variable_context)
+                                                         instructions, variable_context=variable_context,
+                                                         debug=self.debug)
                 # For uniformity, usesless to have the various AI code take care of this.
                 validation_result['is_hidden'] = False
                 cell.metadata['validation'] = validation_result

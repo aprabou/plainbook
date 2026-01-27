@@ -61,7 +61,8 @@ def gemini_generate_code(
     instructions=None,
     file_context=None, 
     error_context=None,
-    variable_context=None):
+    variable_context=None,
+    debug=False):
     # 1. Initialize the Gemini client
     client = genai.Client(api_key=api_key)
     
@@ -78,7 +79,8 @@ INSTRUCTIONS for New Cell:
 Code:
 """
 
-    print("Prompt:", prompt)
+    if debug:
+        print("Prompt:", prompt)
 
     # 3. Generate content
     # Note: System instructions are now passed inside the config argument
@@ -89,7 +91,8 @@ Code:
             system_instruction=SYSTEM_INSTRUCTIONS
         )
     )
-    print("Response:", response.text)
+    if debug:
+        print("Response:", response.text)
     # 4. Process the response
     # We need to strip the ```python ` and trailing ```
     # There is no simple way to get gemini not add this :-) 
@@ -105,7 +108,7 @@ Code:
 # new_code = generate_notebook_cell(api_key, previous_code, "Plot a sine wave with numpy")
 
 
-def gemini_validate_code(api_key, previous_code, code_to_validate, instructions, variable_context=None):
+def gemini_validate_code(api_key, previous_code, code_to_validate, instructions, variable_context=None, debug=False):
     client = genai.Client(api_key=api_key)
     prompt = build_context_prompt(
         previous_code=previous_code,
@@ -122,6 +125,9 @@ INSTRUCTIONS for Validation:
 Validation Result:
 """
 
+    if debug:
+        print("Prompt:", prompt)
+
     response = client.models.generate_content(
         model="gemini-2.0-flash", 
         contents=prompt,
@@ -129,6 +135,8 @@ Validation Result:
             system_instruction=CHECKING_INSTRUCTIONS
         )   
     )
+    if debug:
+        print("Response:", response.text)
     r = response.text.strip()
     if r.upper().startswith("YES"):
         validation_result = dict(is_valid=True, message=clean_start(r[3:]))
