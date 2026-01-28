@@ -29,7 +29,7 @@ export default {
                 fileList.value = data.files || []; 
                 currentPath.value = path;
             } catch (err) {
-                throw new Error("Failed to fetch files:", err);
+                throw new Error("Failed to fetch files", { cause: err });
             } finally {
                 isLoading.value = false;
             }
@@ -76,7 +76,7 @@ export default {
                     })
                 });
             } catch (err) {
-                throw new Error("Failed to sync files with notebook:", err);
+                throw new Error("Failed to sync files with notebook", { cause: err });
             }
         };
 

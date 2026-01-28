@@ -31,6 +31,19 @@ createApp({
         const app = getCurrentInstance().appContext.app;
         app.config.errorHandler = (err, instance, info) => {
             console.error("Global error:", err, instance, info);
+            
+            const formatError = (e) => {
+                const msg = e.message || String(e);
+                const stack = e.stack || '';
+                return stack.includes(msg) ? stack : `${msg}\n${stack}`;
+            };
+
+            let display = formatError(err);
+            // Recursively append the stack traces of the causes
+            for (let cause = err.cause; cause; cause = cause.cause) {
+                display += `\n\nCaused by: ${formatError(cause)}`;
+            }
+            console.log(display);
             uiError.value = err.message || String(err);
         };
 
@@ -61,7 +74,7 @@ createApp({
                 isLocked.value = r.nb?.metadata?.is_locked || false;
             } catch (err) {
                 error.value = err.message;
-                throw new Error("Error in loading notebook: " + err.message);
+                throw new Error("Error in loading notebook", { cause: err });
             } finally {
                 loading.value = false;
                 asRead.value = true;
@@ -85,7 +98,7 @@ createApp({
                 if (!response.ok) throw new Error('Failed to send debug request');
                 console.log('Debug request sent');
             } catch (err) {
-                throw new Error('Debug request error: ' + err.message);
+                throw new Error('Debug request error', { cause: err });
             }
         };
 
@@ -108,7 +121,7 @@ createApp({
                 const r = await response.json();
                 lastRunIndex.value = r.last_executed_cell;
             } catch (err) {
-                throw new Error('Failed to save explanation: ' + err.message);
+                throw new Error('Failed to save explanation', { cause: err });
             }
         };
 
@@ -124,7 +137,7 @@ createApp({
                 isLocked.value = shouldLock;
                 notebook.value.metadata.is_locked = shouldLock;
             } catch (err) {
-                throw new Error('Failed to lock notebook: ' + err.message);
+                throw new Error('Failed to lock notebook', { cause: err });
             }
         };
 
@@ -146,7 +159,7 @@ createApp({
                 // There is code for the cell now. 
                 cell.metadata.codegen = true;
             } catch (err) {
-                throw new Error('Failed to save code: ' + err.message);
+                throw new Error('Failed to save code', { cause: err });
             }
         };
 
@@ -168,7 +181,7 @@ createApp({
                     notebook.value.cells[cellIndex].source = content;
                 }
             } catch (err) {
-                throw new Error('Failed to save markdown: ' + err.message);
+                throw new Error('Failed to save markdown', { cause: err });
             }
         };
 
@@ -234,7 +247,7 @@ createApp({
                     console.log('Code validation received for cell:', cellIndex, r.validation);
                 }
             } catch (err) {
-                throw new Error('Failed to validate code: ' + err.message);
+                throw new Error('Failed to validate code', { cause: err });
             }
         };
 
@@ -251,7 +264,7 @@ createApp({
                     notebook.value.cells[cellIndex].metadata.validation.is_hidden = true;
                 }
             } catch (err) {
-                throw new Error('Failed to dismiss validation: ' + err.message);
+                throw new Error('Failed to dismiss validation', { cause: err });
             }
         };
 
@@ -293,7 +306,7 @@ createApp({
                     });
                 }
             } catch (err) {
-                throw new Error('Failed to insert cell: ' + err.message);
+                throw new Error('Failed to insert cell', { cause: err });
             }
         };
 
@@ -320,7 +333,7 @@ createApp({
                     }
                 }
             } catch (err) {
-                throw new Error('Failed to delete cell: ' + err.message);
+                throw new Error('Failed to delete cell', { cause: err });
             }
         };
 
@@ -345,7 +358,7 @@ createApp({
                     activeIndex.value = newIndex;
                 }
             } catch (err) {
-                throw new Error('Failed to move cell: ' + err.message);
+                throw new Error('Failed to move cell', { cause: err });
             }
         };
 
@@ -411,7 +424,7 @@ createApp({
             const cell = notebook.value.cells[cellIndex];
             if (cell.cell_type !== 'code') return; // Only run code cells
             asRead.value = false;
-            try {
+//            try {
                 const response = await fetch(`/execute_cell?token=${authToken}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -427,7 +440,7 @@ createApp({
                     notebook.value.cells[cellIndex].outputs = r.outputs;
                 }                
                 console.log('Cell executed:', cellIndex, r.details);
-                if (r.details !== 'ok') {
+                if (r.details === 'CellExecutionError') {
                     // The cell executed, but we have to stop other further
                     // cells from executing.
                     if(r.outputs[0].ename === 'ModuleNotFoundError') {
@@ -435,7 +448,7 @@ createApp({
                     } else if (r.outputs[0].ename === 'FileNotFoundError') {
                         throw new Error('The notebook cannot find a file it needs. Please select all the required input files using the selector at the top, so that the AI knows where to find them, and re-generate the code. If the files are already selected, you might want to refer to them in a more precise way, for instance citing their full name.');
                     } else {
-                        throw new Error(r.outputs[0].ename);
+                        throw new Error("Execution error: " + r.outputs[0].ename);
                     }
                 } else {
                     // Update lastRunIndex from server response
@@ -443,10 +456,10 @@ createApp({
                         lastRunIndex.value = r.last_executed_cell;
                     }
                 }
-            } catch (err) {
-                running.value = false; // No longer running.
-                throw new Error(err.message);
-            }
+            // } catch (err) {
+            //     running.value = false;
+            //     throw new Error('Execution error', { cause: err });
+            // }
         };
 
         const interruptKernel = async () => {
@@ -459,7 +472,7 @@ createApp({
                 console.log('Kernel interrupted');
                 running.value = false;
             } catch (err) {
-                throw new Error('Interrupt error: ' + err.message);
+                throw new Error('Interrupt error', { cause: err });
             }
         };
 
@@ -473,7 +486,7 @@ createApp({
                 console.log('Kernel reset');
                 lastRunIndex.value = -1;
             } catch (err) {
-                throw new Error('Reset error: ' + err.message);
+                throw new Error('Reset error', { cause: err });
             }
         };
 
@@ -513,7 +526,7 @@ createApp({
                     throw new Error('Failed to save API key');
                 }
             } catch (err) {
-                throw new Error('Error saving API key: ' + err.message);
+                throw new Error('Error saving API key', { cause: err });
             }
             geminiApiKey.value = newKey;
         };
@@ -558,4 +571,3 @@ createApp({
     },
 template: `#app-template`,
 }).mount('#app');
-

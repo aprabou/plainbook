@@ -97,6 +97,8 @@ class Plainbook(object):
         assert self.client is not None, "Notebook client failed to start"
         # AI request tracker, so we can interrupt if needed.
         self.ai_request_pending = False
+        # We track the default variables, so we do not include them in the context.
+        self.default_variables = self._get_variables()
         # Register the cleanup function
         atexit.register(self._shutdown)
 
@@ -421,8 +423,8 @@ class Plainbook(object):
         else:
             return "\n"
         
-    def _get_variables_for_ai(self):
-        """Returns a formatted text summary of variables in the kernel for AI context."""
+    def _get_variables(self):
+        """Returns a dictionary of variables and their information in the kernel."""
         self._heal_client()
         self.client.kc.execute(VARIABLE_INSPECTION_CODE)
         
@@ -436,17 +438,20 @@ class Plainbook(object):
                     break
         except Exception:
             pass
-
         try:
-            variables = json.loads(result_json)
+            return json.loads(result_json)
         except (json.JSONDecodeError, TypeError):
-            return ""
+            return {}
+        
+    def _get_variables_for_ai(self):
+        """Returns a formatted text summary of variables in the kernel for AI context."""
 
-        if not variables:
-            return "No variables are currently defined in the kernel."
-
-        lines = ["VARIABLES IN KERNEL:"]
+        variables = self._get_variables()
+        lines = []
         for name, info in variables.items():
+            # Skip default variables. 
+            if name in self.default_variables:
+                continue
             v_type = info.get('type', 'unknown')
             details = []
             if 'shape' in info:
@@ -460,6 +465,7 @@ class Plainbook(object):
             lines.append(summary)
             
             if 'columns' in info:
+                lines.append("  Columns:")
                 for col in info['columns']:
                     lines.append(f"  * {col['name']} ({col['dtype']})")
         

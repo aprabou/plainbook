@@ -4,7 +4,7 @@ export default {
     template: /* html */ `
     <div v-if="error" class="notification mb-0 mt-0 px-4 pl-2 pr-6 has-text-danger has-background-danger-light" 
         style="width: 100%; border-radius: 0; align-items: center; justify-content: space-between;">
-        <span><strong>Error:</strong> {{ error }}</span>
+        <span style="white-space: pre-wrap;"><strong>Error:</strong> {{ error }}</span>
         <button class="delete" @click="$emit('close')"></button>
     </div>`
 };
