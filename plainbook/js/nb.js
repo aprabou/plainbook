@@ -26,9 +26,21 @@ createApp({
         const explanationEditKey = ref({});
         const isLocked = ref(false);
         const debug = ref(false);
+        // For running a notebook.
+        const running = ref(false);
+        const lastRunIndex = ref(-1);
+        const lastValidCodeCell = ref(-1);
+        const lastValidOutput = ref(-1);
+        const asRead = ref(true);
+        // For settings modal
+        const showSettings = ref(false);
+        const geminiApiKey = ref('');
+        // For info modal
+        const showInfo = ref(false);
 
         // Configure global error handler
         const app = getCurrentInstance().appContext.app;
+
         app.config.errorHandler = (err, instance, info) => {
             console.error("Global error:", err, instance, info);
             
@@ -46,19 +58,6 @@ createApp({
             console.log(display);
             uiError.value = err.message || String(err);
         };
-
-        // For running a notebook.
-        const running = ref(false);
-        const lastRunIndex = ref(-1);
-        const lastValidCodeCell = ref(-1);
-        const lastValidOutput = ref(-1);
-        const asRead = ref(true);
-
-        // For settings modal
-        const showSettings = ref(false);
-        const geminiApiKey = ref('');
-        // For info modal
-        const showInfo = ref(false);
 
         const updateState = (state) => {
             if (!state) return;
@@ -400,6 +399,7 @@ createApp({
                     } else {
                         throw new Error("Execution error: " + r.outputs[0].ename);
                     }
+                }
         };
 
         const interruptKernel = async () => {
@@ -492,5 +492,6 @@ createApp({
             genError, uiError, closeUiError, debug, sendDebugRequest,
             explanationEditKey, deleteCell, moveCell, geminiApiKey };
     },
+
 template: `#app-template`,
 }).mount('#app');
