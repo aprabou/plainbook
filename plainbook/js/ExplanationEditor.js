@@ -95,7 +95,7 @@ const ExplanationRenderer = {
             <div class="toolbar-left">
                 <button class="button run-button is-small is-primary mr-1" 
                         title="Run this cell and all necessary preceding cells" @click.stop="$emit('run')">
-                    <span class="icon"><i class="fa fa-step-forward"></i></span><span>Run</span>
+                    <span class="icon"><i class="fa fa-play"></i></span><span>Run</span>
                 </button>
                 <button class="button is-small" style="opacity: 0.6;">
                     <span v-if="!codeValid">Needs Code Generation</span>

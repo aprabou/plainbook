@@ -580,7 +580,7 @@ class Plainbook(object):
             cell = self.nb.cells[index]
             assert cell.cell_type == 'code'
             # We can generate code only when: 
-            # - Execution is up to date for the previous code cell.
+            # - Output is up to date for the previous code cell.
             # - The code itself is up to date at least for the previous code cell.
             # To check this, let's find the last code cell before index.
             last_code_cell_idx = -1
@@ -588,12 +588,9 @@ class Plainbook(object):
                 if self.nb.cells[i].cell_type == 'code':
                     last_code_cell_idx = i
                     break
-            if self.last_valid_code_cell < last_code_cell_idx:
-                raise RuntimeError("Cannot generate code: previous code must all be valid.")
-            if self.last_executed_cell < last_code_cell_idx:
-                raise RuntimeError("Cannot generate code: the previous code cell was not executed.")
-                        
-            # TODO: We need also to get the previous outputs. 
+            if last_code_cell_idx > 0 and self.last_valid_output_cell < last_code_cell_idx:
+                raise RuntimeError("Cannot generate code: previous output must be valid.")
+            # Gets code context.                         
             instructions = cell.metadata.get('explanation')
             files_context = self._get_files_context()
             error_context = self._get_error_context(index)
