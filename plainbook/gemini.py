@@ -25,15 +25,18 @@ def clean_start(text):
     return re.sub(SPACES_AND_PUNCTUATION_PATTERN, '', text)
 
 def build_context_prompt(
-    previous_code=None,
+    preceding=None,
+    previous=None,
     file_context=None, 
     error_context=None,
     variable_context=None):
     prompt = f"""
 CONTEXT (Existing Notebook Code):
-{previous_code}
+{preceding}
 
 """ 
+    if previous:
+        prompt += previous + "\n\n"
     if error_context:
         prompt += f"""
 ERROR CONTEXT:
@@ -57,6 +60,7 @@ VARIABLE CONTEXT (Variables currently in memory):
 
 def gemini_generate_code(
     api_key, 
+    preceding_code=None,
     previous_code=None,
     instructions=None,
     file_context=None, 
@@ -68,7 +72,8 @@ def gemini_generate_code(
     
     # 2. Create the prompt
     prompt = build_context_prompt(
-        previous_code=previous_code,
+        preceding=preceding_code,
+        previous=previous_code,
         file_context=file_context,
         error_context=error_context,
         variable_context=variable_context)
@@ -111,7 +116,7 @@ Code:
 def gemini_validate_code(api_key, previous_code, code_to_validate, instructions, variable_context=None, debug=False):
     client = genai.Client(api_key=api_key)
     prompt = build_context_prompt(
-        previous_code=previous_code,
+        preceding=previous_code,
         variable_context=variable_context
     )
     prompt += f"""

@@ -1,5 +1,6 @@
 import atexit
 import asyncio
+import datetime
 import json
 import os
 import threading
@@ -72,6 +73,21 @@ def _get_var_info():
 print(json.dumps(_get_var_info()))
 """
 
+PREVIOUS_CODE_EXPLANATION_CHANGED = """
+PREVIOUS CODE CELL:
+This is the previous code for the cell.  
+The explanation of what needs generating has changed, so the code needs to be revised.
+
+{code_string}
+"""
+
+PREVIOUS_CODE_NEEDS_REVISION = """
+PREVIOUS CELL CODE:
+This is the previous code for the cell; it might need revision as some of the previous code may have changed.
+
+{code_string}
+"""
+
     
 class Plainbook(object):
     """This class implements an Plainbook and its operations."""
@@ -115,9 +131,14 @@ class Plainbook(object):
                     cell.source = tostring(cell.source)
                     if cell.cell_type == 'code':
                         if 'explanation' not in cell.metadata:
-                            cell.metadata['explanation'] = ""
+                            cell.metadata['explanation'] = cell.source
+                            cell.metadata['explanation_timestamp'] = datetime.datetime.now().isoformat()
                         else:
                             cell.metadata['explanation'] = tostring(cell.metadata['explanation'])
+                        if cell.metadata.get('code_timestamp') is None:
+                            cell.metadata['code_timestamp'] = datetime.datetime.now().isoformat()
+                        if cell.metadata.get('explanation_timestamp') is None:
+                            cell.metadata['explanation_timestamp'] = datetime.datetime.now().isoformat()
         except (FileNotFoundError, OSError):
             # Ensure parent directory exists
             parent = os.path.dirname(self.path) or "."
@@ -397,6 +418,7 @@ class Plainbook(object):
             else:
                 new_cell = nbformat.v4.new_code_cell(source="", execution_count=None, outputs=[])
                 new_cell.metadata['explanation'] = []
+                new_cell.metadata['explanation_timestamp'] = datetime.datetime.now().isoformat()
             self.nb.cells.insert(index, new_cell)
             # Inserting code cells before the last executed cell requires resetting the kernel.
             if cell_type == 'code':
@@ -477,6 +499,7 @@ class Plainbook(object):
             assert 0 <= index < len(self.nb.cells)
             cell = self.nb.cells[index]
             cell.source = source
+            cell.metadata['code_timestamp'] = datetime.datetime.now().isoformat()
             if cell.cell_type == 'code':
                 # Reset outputs and execution count on code cell edit
                 cell.outputs = []
@@ -499,6 +522,7 @@ class Plainbook(object):
             cell = self.nb.cells[index]
             assert cell.cell_type == 'code'
             cell.metadata['explanation'] = explanation
+            cell.metadata['explanation_timestamp'] = datetime.datetime.now().isoformat()
             # The cell code is now considered stale. 
             self.last_valid_code_cell = min(self.last_valid_code_cell, index - 1)
             self.last_valid_output_cell = min(self.last_valid_output_cell, index - 1)
@@ -567,10 +591,22 @@ class Plainbook(object):
             self.nb = nbformat.reads(nb, as_version=4)
             
 
-    def _get_code_for_ai(self, index):
+    def _get_preceding_code_for_ai(self, index):
         """Returns the concatenated source code of all previous code cells for context."""
         previous_code = [self._get_cell_for_ai(i) for i in range(index)]
         return "\n".join(previous_code)
+    
+    
+    def _get_cell_code_for_ai(self, index):
+        """Returns the source code of the cell at index for context."""
+        cell = self.nb.cells[index]
+        if cell.cell_type != 'code' or cell.source is None or cell.source.strip() == "":
+            return None
+        code_string = self._get_cell_for_ai(index)
+        if cell.metadata['explanation_timestamp'] < cell.metadata['code_timestamp']:
+            return PREVIOUS_CODE_NEEDS_REVISION.format(code_string=code_string)
+        else:
+            return PREVIOUS_CODE_EXPLANATION_CHANGED.format(code_string=code_string)
         
 
     def generate_code_cell(self, api_key, index):
@@ -595,20 +631,25 @@ class Plainbook(object):
             files_context = self._get_files_context()
             error_context = self._get_error_context(index)
             variable_context = self._get_variables_for_ai(index)
-            previous_code = self._get_code_for_ai(index)
+            preceding_code = self._get_preceding_code_for_ai(index)
+            previous_code = self._get_cell_code_for_ai(index)
             # Mark that an AI request is pending
             if self.ai_request_pending:
                 raise RuntimeError("An AI request is already pending.")
             try:
                 self.ai_request_pending = True
                 new_code = gemini_generate_code(
-                    api_key, previous_code=previous_code, instructions=instructions,
+                    api_key, 
+                    preceding_code=preceding_code, 
+                    previous_code=previous_code,
+                    instructions=instructions,
                     file_context=files_context, error_context=error_context,
                     variable_context=variable_context, 
                     debug=self.debug)
                 # If we are still in a request, update the cell.
                 if self.ai_request_pending:
                     cell.source = new_code
+                    cell.metadata['code_timestamp'] = datetime.datetime.now().isoformat()
                     # Reset outputs and execution count
                     cell.outputs = []
                     if index <= self.last_executed_cell:
@@ -642,7 +683,7 @@ class Plainbook(object):
             assert cell.cell_type == 'code'
             code_to_validate = cell.source
             instructions = cell.metadata.get('explanation')
-            previous_code = self._get_code_for_ai(index)
+            previous_code = self._get_preceding_code_for_ai(index)
             variable_context = self._get_variables_for_ai(index)
             try:
                 validation_result = gemini_validate_code(api_key, previous_code, code_to_validate, 
