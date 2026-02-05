@@ -7,9 +7,10 @@ import SettingsModal from './SettingsModal.js';
 import InfoModal from './InfoModal.js';
 import UiError from './UiError.js';
 import InputFile from './InputFile.js';
+import NotebookHelp from './NotebookHelp.js';
 
 createApp({
-    components: { AppNavbar, NotebookCell, CellInsertionZone, SettingsModal, InfoModal, UiError, InputFile },
+    components: { AppNavbar, NotebookCell, CellInsertionZone, SettingsModal, InfoModal, UiError, InputFile, NotebookHelp },
     setup() {
         // Extract token from URL
         const urlParams = new URLSearchParams(window.location.search);
