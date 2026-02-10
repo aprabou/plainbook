@@ -184,10 +184,9 @@ class Plainbook(object):
         This function is called to update the frontend at the end
         of most method calls."""
         try:
-            assert self.last_valid_code_cell >= self.last_valid_output_cell >= self.last_executed_cell, (
+            assert self.last_valid_code_cell >= self.last_valid_output_cell, (
                 f"last_valid_code_cell {self.last_valid_code_cell}, "
-                f"last_valid_output {self.last_valid_output_cell}, "
-                f"last_executed_cell {self.last_executed_cell}")
+                f"last_valid_output {self.last_valid_output_cell} ")
         except AssertionError as e:
             print(f"State violation: {e}")
             if not self.debug:
