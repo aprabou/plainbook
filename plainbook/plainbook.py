@@ -1,5 +1,6 @@
 import atexit
 import asyncio
+import copy
 import datetime
 import json
 import os
@@ -534,7 +535,7 @@ class Plainbook(object):
     # Methods to support AI
     
     def _get_cell_for_ai(self, index):
-        """Returns the JSON of a cell for AI processing.
+        """Returns the content of a cell for AI processing.
         Needs to be called with the lock held."""
         cell = self.nb.cells[index]
         if cell.cell_type == 'code':
@@ -548,7 +549,21 @@ class Plainbook(object):
             return "".join(commented_lines) + "\n"
         else:
             return "\n"
+    
                 
+    def _get_cell_json_for_ai(self, index):
+        """Returns the content of a cell for AI processing, in JSON format.
+        Needs to be called with the lock held."""
+        cell = self.nb.cells[index]
+        new_cell = copy.deepcopy(cell)
+        if cell.cell_type == 'code':
+            explanation = cell.metadata.get('explanation', "")
+            explanation = ["# " + line for line in explanation.splitlines(keepends=True)]
+            explanation_text = "".join(explanation) + "\n"
+            new_cell.source = explanation_text + cell.source
+        return new_cell
+    
+
     def _get_variables_for_ai(self, index):
         """Returns a formatted text summary of variables in the kernel 
         that are defined just _before_ the cell at index is executed. 
@@ -599,6 +614,15 @@ class Plainbook(object):
         return "\n".join(previous_code)
     
     
+    def _get_preceding_code_json_for_ai(self, index):
+        """Returns the JSON representation of all previous code cells for context."""
+        cells = [self._get_cell_json_for_ai(i) for i in range(index)]
+        nb = nbformat.v4.new_notebook()
+        nb.cells = cells
+        nb_json = nbformat.writes(nb, indent=4)
+        return nb_json
+    
+    
     def _get_cell_code_for_ai(self, index):
         """Returns the source code of the cell at index for context."""
         cell = self.nb.cells[index]
@@ -633,7 +657,7 @@ class Plainbook(object):
             files_context = self._get_files_context()
             error_context = self._get_error_context(index)
             variable_context = self._get_variables_for_ai(index)
-            preceding_code = self._get_preceding_code_for_ai(index)
+            preceding_code = self._get_preceding_code_json_for_ai(index)
             previous_code = self._get_cell_code_for_ai(index)
             # Mark that an AI request is pending
             if self.ai_request_pending:
@@ -685,7 +709,7 @@ class Plainbook(object):
             assert cell.cell_type == 'code'
             code_to_validate = cell.source
             instructions = cell.metadata.get('explanation')
-            previous_code = self._get_preceding_code_for_ai(index)
+            previous_code = self._get_preceding_code_json_for_ai(index)
             variable_context = self._get_variables_for_ai(index)
             try:
                 validation_result = gemini_validate_code(api_key, previous_code, code_to_validate, 

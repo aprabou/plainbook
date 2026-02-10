@@ -32,6 +32,7 @@ plainbook path/to/notebook.nlb
 ``` 
 
 (where `.nlb` is a Natural Language Notebook file; you can use other extensions if you wish). 
+The file is created if it does not exist.
 For a list of command-lien options, do: 
 
 ```bash

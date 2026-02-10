@@ -7,7 +7,12 @@ from google.genai import types
 SPACES_AND_PUNCTUATION_PATTERN = f"^[{re.escape(string.punctuation + string.whitespace)}]+"
 
 SYSTEM_INSTRUCTIONS = """
-You are an assistant that writes Python code for Jupyter cells.
+You are an assistant that writes Python code for Jupyter cells, and your task is to 
+write the code for one Jupyter cell.
+You are given specific instructions on what the new cell should do. 
+To help write the code, you are also given the previous cells of the Jupyter notebook 
+(in JSON format), along with their output (if any) and a description of the variables 
+that are present after executing those cells.
 Return ONLY the code, no markdown formatting or explanations.
 To display Pandas dataframes, you can simply return the dataframe variable name,
 and the notebook will render it appropriately.
@@ -15,8 +20,12 @@ and the notebook will render it appropriately.
 
 CHECKING_INSTRUCTIONS = """
 You are an assistant that validates Python code for Jupyter cells. 
-Your task is to check whether the provided code meets the given instructions. 
-The code of the previous cells is also included as context. 
+Your task is to check whether a Jupyter notebook cell does what it specified in its instructions. 
+You are given the instructions, the code of the cell to verify, 
+and you are also given all previous cells of the Jupyter notebook (in JSON format), 
+including with their output (if any). 
+You are also given a description of the variables that are present after executing those 
+previous cells.
 You should return the words YES (if the code meets the instructions) or NO (if it does not), 
 followed by a brief explanation.
 """
