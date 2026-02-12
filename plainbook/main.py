@@ -1,6 +1,7 @@
 # General imports
 import argparse
 import asyncio
+import datetime
 from functools import wraps
 import json
 from nbclient.exceptions import CellExecutionError
@@ -50,7 +51,27 @@ parser.add_argument('--port', type=int, default=8080,
                     help='Port to run the server on')
 args = parser.parse_args()
 
-AUTH_TOKEN = "secret" if args.debug else secrets.token_hex(32)
+def _get_or_create_debug_token():
+    """Return a stable debug token from settings, creating one if absent or stale (>24h)."""
+    token_info = settings.get('debug_token')
+    if token_info:
+        created = token_info.get('created')
+        token = token_info.get('token')
+        if token and created:
+            age = datetime.datetime.now() - created
+            if age.total_seconds() < 86400:
+                return token
+    # Create a new debug token.
+    token = secrets.token_hex(32)
+    settings['debug_token'] = {
+        'token': token,
+        'created': datetime.datetime.now(),
+    }
+    with open(SETTINGS_FILE, 'w') as f:
+        yaml.dump(settings, f)
+    return token
+
+AUTH_TOKEN = _get_or_create_debug_token() if args.debug else secrets.token_hex(32)
                     
 notebook_path = os.path.abspath(args.notebook)
     
