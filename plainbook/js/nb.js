@@ -33,6 +33,31 @@ createApp({
         const last_valid_code_cell_index = ref(-1);
         const last_valid_output_cell_index = ref(-1);
         const asRead = ref(true);
+        // Track pending save operations so ui_* functions can wait for them.
+        let pendingSaves = [];
+
+        const trackSave = (savePromise) => {
+            pendingSaves.push(savePromise);
+            const cleanup = () => {
+                const idx = pendingSaves.indexOf(savePromise);
+                if (idx !== -1) pendingSaves.splice(idx, 1);
+            };
+            savePromise.then(cleanup, cleanup);
+        };
+
+        const waitForPendingSaves = async () => {
+            if (pendingSaves.length > 0) {
+                await Promise.allSettled([...pendingSaves]);
+            }
+        };
+
+        // Dispatch flush-edits event so any in-progress editor saves its content.
+        // dispatchEvent is synchronous: all listeners complete before this returns,
+        // so tracked saves are visible to waitForPendingSaves() immediately after.
+        const flushActiveEdits = () => {
+            window.dispatchEvent(new Event('plainbook:flush-edits'));
+        };
+
         // For settings modal
         const showSettings = ref(false);
         const geminiApiKey = ref('');
@@ -126,18 +151,22 @@ createApp({
 
         const sendExplanationToServer = async (content, cellIndex) => {
             asRead.value = false;
-            try {
-                await apiCall('/edit_explanation', 'POST', { 
-                    cell_index: cellIndex, 
-                    explanation: content 
-                });
-                if (notebook.value && notebook.value.cells[cellIndex]) {
-                    notebook.value.cells[cellIndex].metadata.explanation = content;
+            const savePromise = (async () => {
+                try {
+                    await apiCall('/edit_explanation', 'POST', {
+                        cell_index: cellIndex,
+                        explanation: content
+                    });
+                    if (notebook.value && notebook.value.cells[cellIndex]) {
+                        notebook.value.cells[cellIndex].metadata.explanation = content;
+                    }
+                    console.log('Explanation saved:', cellIndex);
+                } catch (err) {
+                    throw new Error('Failed to save explanation', { cause: err });
                 }
-                console.log('Explanation saved:', cellIndex);
-            } catch (err) {
-                throw new Error('Failed to save explanation', { cause: err });
-            }
+            })();
+            trackSave(savePromise);
+            return savePromise;
         };
 
         const lockNotebook = async (shouldLock) => {
@@ -151,16 +180,19 @@ createApp({
 
         const sendCodeToServer = async (content, cellIndex) => {
             asRead.value = false;
-            const cell = notebook.value.cells[cellIndex];
-            try {
-                await apiCall('/edit_code', 'POST', { 
-                    cell_index: cellIndex, 
-                    source: content 
-                });
-                console.log('Code saved:', cellIndex);
-            } catch (err) {
-                throw new Error('Failed to save code', { cause: err });
-            }
+            const savePromise = (async () => {
+                try {
+                    await apiCall('/edit_code', 'POST', {
+                        cell_index: cellIndex,
+                        source: content
+                    });
+                    console.log('Code saved:', cellIndex);
+                } catch (err) {
+                    throw new Error('Failed to save code', { cause: err });
+                }
+            })();
+            trackSave(savePromise);
+            return savePromise;
         };
 
         const sendMarkdownToServer = async (content, cellIndex) => {
@@ -403,6 +435,8 @@ createApp({
 
 
         const ui_runCell = async (cellIndex) => {
+            flushActiveEdits();
+            await waitForPendingSaves();
             if (!running.value) {
                 running.value = true;
                 await runCells(cellIndex);
@@ -413,6 +447,8 @@ createApp({
 
         const ui_resetAndRunAllCells = async () => {
             asRead.value = false;
+            flushActiveEdits();
+            await waitForPendingSaves();
             if (!running.value) {
                 running.value = true;
                 await ui_resetKernel();
@@ -424,12 +460,13 @@ createApp({
 
         const ui_forceRegenerateCellCode = async (cellIndex) => {
             asRead.value = false;
+            flushActiveEdits();
+            await waitForPendingSaves();
             if (!running.value) {
                 running.value = true;
                 await generateCodeOneCell(cellIndex, true);
                 running.value = false;
             }
-            await generateCodeOneCell(cellIndex, true);
         };
 
 

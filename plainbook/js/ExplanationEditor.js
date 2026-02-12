@@ -1,4 +1,4 @@
-import { ref, computed, watch, nextTick } from './vue.esm-browser.js';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from './vue.esm-browser.js';
 
 import CellStateButton from './CellStateButton.js';
 
@@ -68,6 +68,7 @@ const ExplanationRenderer = {
         });
 
         const saveChanges = () => {
+            if (!isEditing.value) return;
             isEditing.value = false;
             emit('save', localSource.value);
         };
@@ -76,6 +77,25 @@ const ExplanationRenderer = {
             isEditing.value = false;
             emit('saveandrun', localSource.value);
         };
+
+        // Handler for the flush-edits event: save if currently editing.
+        const handleFlushEdits = () => {
+            if (isEditing.value) {
+                saveChanges();
+            }
+        };
+
+        // On blur, dispatch the flush event (which this and other editors listen for).
+        const onBlur = () => {
+            window.dispatchEvent(new Event('plainbook:flush-edits'));
+        };
+
+        onMounted(() => {
+            window.addEventListener('plainbook:flush-edits', handleFlushEdits);
+        });
+        onBeforeUnmount(() => {
+            window.removeEventListener('plainbook:flush-edits', handleFlushEdits);
+        });
 
         const cancelEdit = () => {
             const originalIsEmpty = !originalSource.value || originalSource.value.trim().length === 0;
@@ -88,8 +108,8 @@ const ExplanationRenderer = {
             isEditing.value = false;
         };
 
-        return { isEditing, localSource, rendered, enterEditMode, saveChanges, 
-            cancelEdit, textareaEl, autoResize, saveAndRun, localIsLocked, 
+        return { isEditing, localSource, rendered, enterEditMode, saveChanges,
+            cancelEdit, textareaEl, autoResize, saveAndRun, onBlur, localIsLocked,
             CellStateButton };
     },
 
@@ -156,16 +176,17 @@ const ExplanationRenderer = {
                 rows="1"
                 style="overflow: hidden; resize: none; height: 0;"
                 @input="autoResize"
+                @blur="onBlur"
                 @keydown.enter.shift.prevent="saveAndRun">
             </textarea>
             <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                <button class="button is-small" @click="cancelEdit">
+                <button class="button is-small" @mousedown.prevent @click="cancelEdit">
                     Cancel
                 </button>
-                <button class="button is-small is-info" :disabled="localIsLocked" @click="saveChanges">
+                <button class="button is-small is-info" :disabled="localIsLocked" @mousedown.prevent @click="saveChanges">
                     Save
                 </button>
-                <button class="button is-small is-primary" :disabled="localIsLocked" @click="saveAndRun">
+                <button class="button is-small is-primary" :disabled="localIsLocked" @mousedown.prevent @click="saveAndRun">
                     <span class="icon"><i class="fa fa-play"></i></span> 
                     <span>Save and Run</span>
                 </button>

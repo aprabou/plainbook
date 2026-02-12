@@ -1,4 +1,4 @@
-import { ref, computed, watch, nextTick } from './vue.esm-browser.js';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from './vue.esm-browser.js';
 
 import CellStateButton from './CellStateButton.js';
 
@@ -118,9 +118,27 @@ export default {
         };
 
         const saveCode = () => {
+            if (!isEditing.value) return;
             isEditing.value = false;
             emit('save', localSource.value);
         };
+
+        const handleFlushEdits = () => {
+            if (isEditing.value) {
+                saveCode();
+            }
+        };
+
+        const onBlur = () => {
+            window.dispatchEvent(new Event('plainbook:flush-edits'));
+        };
+
+        onMounted(() => {
+            window.addEventListener('plainbook:flush-edits', handleFlushEdits);
+        });
+        onBeforeUnmount(() => {
+            window.removeEventListener('plainbook:flush-edits', handleFlushEdits);
+        });
 
         const cancelEdit = () => {
             localSource.value = originalSource.value;
@@ -132,9 +150,9 @@ export default {
             if (!isCollapsed.value && isEditing.value) nextTick(autoResize);
         };
 
-        return { isCollapsed, toggleCollapse, isEditing, cancelEdit, localSource, 
-            localIsLocked, highlightedCode, enterEditMode, saveCode, textareaEl, 
-            CellStateButton, autoResize, handleTabKey };
+        return { isCollapsed, toggleCollapse, isEditing, cancelEdit, localSource,
+            localIsLocked, highlightedCode, enterEditMode, saveCode, textareaEl,
+            CellStateButton, autoResize, handleTabKey, onBlur };
     },
     template: /* html */ `
         <div class="code-cell-wrapper" style="position: relative; min-height: 1.75rem;">
@@ -166,13 +184,14 @@ export default {
                         style="overflow: hidden; resize: none; height: 0;"
                         @input="autoResize"
                         @keydown.tab.prevent="handleTabKey"
+                        @blur="onBlur"
                         @keydown.enter.shift.prevent="saveCode">
                     </textarea>
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                        <button class="button is-small" @click="cancelEdit">
+                        <button class="button is-small" @mousedown.prevent @click="cancelEdit">
                             Cancel
                         </button>
-                        <button class="button is-small is-primary" :disabled="localIsLocked" @click="saveCode">
+                        <button class="button is-small is-primary" :disabled="localIsLocked" @mousedown.prevent @click="saveCode">
                             Save
                         </button>
                     </div>

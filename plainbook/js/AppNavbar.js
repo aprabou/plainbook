@@ -48,7 +48,8 @@ export default {
 
                         <button v-if="!running && hasNotebook"
                             :disabled="cellCount === 0"
-                            @click="$emit('reset-run-all')" 
+                            @mousedown.prevent
+                            @click="$emit('reset-run-all')"
                             title="Reset and run all cells"
                             class="button is-primary">
                             <span class="icon px-4">
@@ -60,7 +61,8 @@ export default {
 
                         <button v-if="!running && hasNotebook"
                             :disabled="cellCount === 0"
-                            @click="$emit('run-all')" 
+                            @mousedown.prevent
+                            @click="$emit('run-all')"
                             title="Run all"
                             class="button is-primary">
                             <span class="icon"><i class="fa fa-play"></i></span>
