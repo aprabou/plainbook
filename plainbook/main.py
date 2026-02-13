@@ -19,7 +19,7 @@ from bottle import run, default_app, request, TEMPLATE_PATH
 # print(f"DEBUGGER PYTHON: {sys.executable}")
 
 # Plainbook imports
-from .plainbook_jupyter import PlainbookJupyter, ExecutionError
+from .plainbook_base import ExecutionError
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
@@ -49,6 +49,8 @@ parser.add_argument('--debug', action='store_true', default=False,
                     help='Enable debug mode')
 parser.add_argument('--port', type=int, default=8080,
                     help='Port to run the server on')
+parser.add_argument('--kernel', choices=['jupyter', 'lda'], default='jupyter',
+                    help='Kernel backend to use (jupyter or lda)')
 args = parser.parse_args()
 
 def _get_or_create_debug_token():
@@ -74,8 +76,13 @@ def _get_or_create_debug_token():
 AUTH_TOKEN = _get_or_create_debug_token() if args.debug else secrets.token_hex(32)
                     
 notebook_path = os.path.abspath(args.notebook)
-    
-notebook = PlainbookJupyter(notebook_path, debug=args.debug)
+
+if args.kernel == 'lda':
+    from .plainbook_ldakernel import Plainbook_LDAKernel
+    notebook = Plainbook_LDAKernel(notebook_path, debug=args.debug)
+else:
+    from .plainbook_jupyter import PlainbookJupyter
+    notebook = PlainbookJupyter(notebook_path, debug=args.debug)
 assert notebook.kc is not None
 assert notebook.km.is_alive()
                     
