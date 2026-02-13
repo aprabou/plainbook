@@ -19,7 +19,7 @@ from bottle import run, default_app, request, TEMPLATE_PATH
 # print(f"DEBUGGER PYTHON: {sys.executable}")
 
 # Plainbook imports
-from .plainbook import Plainbook, ExecutionError
+from .plainbook_jupyter import PlainbookJupyter, ExecutionError
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
@@ -75,7 +75,7 @@ AUTH_TOKEN = _get_or_create_debug_token() if args.debug else secrets.token_hex(3
                     
 notebook_path = os.path.abspath(args.notebook)
     
-notebook = Plainbook(notebook_path, debug=args.debug)
+notebook = PlainbookJupyter(notebook_path, debug=args.debug)
 assert notebook.kc is not None
 assert notebook.km.is_alive()
                     

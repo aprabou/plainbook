@@ -90,7 +90,7 @@ This is the previous code for the cell; it might need revision as some of the pr
 """
 
     
-class Plainbook(object):
+class PlainbookJupyter(object):
     """This class implements an Plainbook and its operations."""
     
     def __init__(self, notebook_path, debug=False):
