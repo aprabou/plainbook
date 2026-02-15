@@ -40,6 +40,27 @@ try:
 except FileNotFoundError:
     settings = {}
 
+AI_PROVIDER_REGISTRY = [
+    {"id": "gemini", "name": "Gemini", "key_setting": "gemini_api_key"},
+    {"id": "claude", "name": "Claude", "key_setting": "claude_api_key"},
+]
+
+def _ensure_active_ai_provider():
+    """Validate active_ai_provider setting; auto-select first available if invalid."""
+    current = settings.get('active_ai_provider')
+    for p in AI_PROVIDER_REGISTRY:
+        if p['id'] == current and settings.get(p['key_setting']):
+            return current
+    # Current is invalid or missing — pick first provider with a key
+    for p in AI_PROVIDER_REGISTRY:
+        if settings.get(p['key_setting']):
+            settings['active_ai_provider'] = p['id']
+            return p['id']
+    settings['active_ai_provider'] = None
+    return None
+
+_ensure_active_ai_provider()
+
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Run the plainbook notebook server')
 parser.add_argument('notebook',
@@ -132,7 +153,9 @@ def get_notebook():
         nb=notebook.get_json(),
         gemini_api_key=settings.get('gemini_api_key'),
         claude_api_key=settings.get('claude_api_key'),
-        debug=args.debug
+        debug=args.debug,
+        active_ai_provider=settings.get('active_ai_provider'),
+        ai_providers=AI_PROVIDER_REGISTRY,
     )
 
 @post('/set_key')
@@ -147,10 +170,29 @@ def set_key():
     try:
         with open(SETTINGS_FILE, 'w') as f:
             yaml.dump(settings, f)
-        return dict(status='success')
+        active = _ensure_active_ai_provider()
+        return dict(status='success', active_ai_provider=active)
     except Exception as e:
         return dict(status='error', message=str(e))
-    
+
+@post('/set_active_ai')
+@require_token
+def set_active_ai():
+    data = request.json
+    provider_id = data.get('provider')
+    valid_ids = [p['id'] for p in AI_PROVIDER_REGISTRY]
+    if provider_id not in valid_ids:
+        return dict(status='error', message=f'Unknown provider: {provider_id}')
+    for p in AI_PROVIDER_REGISTRY:
+        if p['id'] == provider_id:
+            if not settings.get(p['key_setting']):
+                return dict(status='error', message=f'No API key set for {p["name"]}')
+            break
+    settings['active_ai_provider'] = provider_id
+    with open(SETTINGS_FILE, 'w') as f:
+        yaml.dump(settings, f)
+    return dict(status='success', active_ai_provider=provider_id)
+
 @post('/edit_explanation')
 @stateful
 @require_token
@@ -252,18 +294,28 @@ def interrupt_kernel():
         return dict(status='error', message=str(e))
     
     
-def _get_ai_config(data):
-    """Resolve AI provider and API key from request data."""
-    ai_provider = data.get('ai_provider', 'gemini')
-    if ai_provider == 'claude':
-        api_key = settings.get('claude_api_key')
-        if not api_key:
-            return None, None, 'Claude API key not set.'
-    else:
-        api_key = settings.get('gemini_api_key')
-        if not api_key:
-            return None, None, 'Gemini API key not set.'
-    return api_key, ai_provider, None
+def _get_ai_config():
+    """Resolve AI provider and API key from server-side active provider setting."""
+    ai_provider = settings.get('active_ai_provider')
+    if not ai_provider:
+        return None, None, 'No AI provider is active. Please set an API key in Settings.'
+    for p in AI_PROVIDER_REGISTRY:
+        if p['id'] == ai_provider:
+            api_key = settings.get(p['key_setting'])
+            if not api_key:
+                return None, None, f'{p["name"]} API key not set.'
+            return api_key, ai_provider, None
+    return None, None, f'Unknown AI provider: {ai_provider}'
+
+_BILLING_KEYWORDS = ['credit balance', 'billing', 'quota', 'rate limit', 'resource exhausted', 'exceeded your current']
+
+def _check_billing_error(e):
+    """If e looks like an AI billing/rate-limit error, return a friendly message; else None."""
+    msg = str(e).lower()
+    if any(kw in msg for kw in _BILLING_KEYWORDS):
+        return ('AI usage limit reached. Please check your AI provider billing '
+                'and increase your usage limits.')
+    return None
 
 @post('/generate_code')
 @stateful
@@ -271,27 +323,39 @@ def _get_ai_config(data):
 def generate_code_cell():
     data = request.json
     cell_index = data.get('cell_index')
-    api_key, ai_provider, error = _get_ai_config(data)
+    api_key, ai_provider, error = _get_ai_config()
     if error:
         return dict(status='error', message=error)
-    new_code, success = notebook.generate_code_cell(api_key, cell_index, ai_provider=ai_provider)
+    try:
+        new_code, success = notebook.generate_code_cell(api_key, cell_index, ai_provider=ai_provider)
+    except Exception as e:
+        friendly = _check_billing_error(e)
+        if friendly:
+            return dict(status='error', message=friendly)
+        raise
     if success:
         return dict(status='success', code=new_code)
     else:
         # The request was cancelled, we need to avoid updating the code.
         return dict(status='cancelled', code=None)
-    
-    
+
+
 @post('/validate_code')
 @stateful
 @require_token
 def validate_code_cell():
     data = request.json
     cell_index = data.get('cell_index')
-    api_key, ai_provider, error = _get_ai_config(data)
+    api_key, ai_provider, error = _get_ai_config()
     if error:
         return dict(status='error', message=error)
-    validation_result = notebook.validate_code_cell(api_key, cell_index, ai_provider=ai_provider)
+    try:
+        validation_result = notebook.validate_code_cell(api_key, cell_index, ai_provider=ai_provider)
+    except Exception as e:
+        friendly = _check_billing_error(e)
+        if friendly:
+            return dict(status='error', message=friendly)
+        raise
     return dict(status='success', validation=validation_result)
 
 

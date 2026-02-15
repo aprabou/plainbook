@@ -1,4 +1,4 @@
-import { createApp, ref, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from './vue.esm-browser.js';
+import { createApp, ref, computed, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from './vue.esm-browser.js';
 
 import AppNavbar from './AppNavbar.js';
 import NotebookCell from './NotebookCell.js';
@@ -62,6 +62,17 @@ createApp({
         const showSettings = ref(false);
         const geminiApiKey = ref('');
         const claudeApiKey = ref('');
+        const activeAiProvider = ref(null);
+        const aiProviderRegistry = ref([]);
+
+        const availableAiProviders = computed(() => {
+            const keyValues = {
+                'gemini_api_key': geminiApiKey.value,
+                'claude_api_key': claudeApiKey.value,
+            };
+            return aiProviderRegistry.value.filter(p => !!keyValues[p.key_setting]);
+        });
+
         // For info modal
         const showInfo = ref(false);
 
@@ -124,6 +135,8 @@ createApp({
                 notebook.value = r.nb;
                 geminiApiKey.value = r.gemini_api_key || '';
                 claudeApiKey.value = r.claude_api_key || '';
+                activeAiProvider.value = r.active_ai_provider || null;
+                aiProviderRegistry.value = r.ai_providers || [];
                 debug.value = r.debug || false;
             } catch (err) {
                 error.value = err.message;
@@ -215,18 +228,21 @@ createApp({
 
 
         const validateCode = async (cellIndex) => {
-            if (!geminiApiKey.value) {
-                throw new Error('Gemini API key is not set. Please set it in the settings.');
+            if (!activeAiProvider.value) {
+                throw new Error('No AI provider is active. Please set an API key in Settings.');
             };
             asRead.value = false;
             try {
                 const r = await apiCall('/validate_code', 'POST', { cell_index: cellIndex });
+                if (r.status === 'error') {
+                    throw new Error(r.message || 'Validation failed');
+                }
                 if (notebook.value && notebook.value.cells[cellIndex]) {
                     notebook.value.cells[cellIndex].metadata.validation = r.validation;
                     console.log('Code validation received for cell:', cellIndex, r.validation);
                 }
             } catch (err) {
-                throw new Error('Failed to validate code', { cause: err });
+                throw new Error(err.message || 'Failed to validate code', { cause: err });
             }
         };
 
@@ -327,8 +343,8 @@ createApp({
         
         // Generate code up to the current cell. 
         const generateCode = async (cellIndex) => {
-            if (!geminiApiKey.value) {
-                throw new Error('Gemini API key is not set. Please set it in the settings.');
+            if (!activeAiProvider.value) {
+                throw new Error('No AI provider is active. Please set an API key in Settings.');
             };
             asRead.value = false;
             for (let i = last_valid_code_cell_index.value + 1; i <= cellIndex; i++) {
@@ -518,16 +534,32 @@ createApp({
         const saveSettings = async (keys) => {
             // Save the API keys to the server
             try {
-                await apiCall('/set_key', 'POST', {
+                const r = await apiCall('/set_key', 'POST', {
                     gemini_api_key: keys.gemini_api_key,
                     claude_api_key: keys.claude_api_key,
                 });
                 console.log('API keys saved successfully');
+                if (r.active_ai_provider !== undefined) {
+                    activeAiProvider.value = r.active_ai_provider;
+                }
             } catch (err) {
                 throw new Error('Error saving API keys', { cause: err });
             }
             geminiApiKey.value = keys.gemini_api_key;
             claudeApiKey.value = keys.claude_api_key;
+        };
+
+        const setActiveAiProvider = async (providerId) => {
+            try {
+                const r = await apiCall('/set_active_ai', 'POST', { provider: providerId });
+                if (r.status === 'success') {
+                    activeAiProvider.value = r.active_ai_provider;
+                } else {
+                    throw new Error(r.message || 'Failed to set AI provider');
+                }
+            } catch (err) {
+                throw new Error('Error setting AI provider', { cause: err });
+            }
         };
 
         const genError = () => {
@@ -564,9 +596,10 @@ createApp({
             setActiveCell, ui_runCell, running, asRead,
             ui_interruptKernel, insertCell, markdownEditKey,
             last_executed_cell_index, last_valid_code_cell_index, last_valid_output_cell_index,
-            saveSettings, showSettings, showInfo, 
+            saveSettings, showSettings, showInfo,
             genError, uiError, closeUiError, debug, sendDebugRequest,
-            explanationEditKey, deleteCell, moveCell, geminiApiKey, claudeApiKey };
+            explanationEditKey, deleteCell, moveCell, geminiApiKey, claudeApiKey,
+            activeAiProvider, availableAiProviders, setActiveAiProvider };
     },
 
 template: `#app-template`,
