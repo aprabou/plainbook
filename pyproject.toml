@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plainbook"
-version = "0.0.15"
+version = "0.0.16"
 description = "Plain Language Notebooks"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -16,11 +16,18 @@ authors = [
 ]
 keywords = ["notebook", "jupyter", "natural language", "data science"]
 
-# Mark dependencies as dynamic so they aren't hardcoded here
-dynamic = ["dependencies"]
-[tool.setuptools.dynamic]
-# Tell setuptools to read the dependencies from requirements.txt
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+    "bottle",
+    "cherrypy",
+    "google-genai",
+    "ipykernel",
+    "jupyter_client",
+    "snapshot-kernel",
+    "nbclient",
+    "nbformat",
+    "pyyaml",
+    "requests",
+]
 
 [project.scripts]
 plainbook = "plainbook.main:main"
@@ -35,5 +42,4 @@ where = ["."]
 include = ["plainbook*"]
 
 [tool.setuptools.package-data]
-# 3. Your files will still be included because they are part of 'plainbook'
 plainbook = ["js/*.js", "css/*.css", "views/*.html", "fonts/*"]

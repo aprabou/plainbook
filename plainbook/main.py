@@ -42,14 +42,13 @@ except FileNotFoundError:
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Run the plainbook notebook server')
-parser.add_argument('notebook', nargs='?', 
-                    default=os.path.join(TEST_INPUTS, 'sample_notebook.ipynb'),
+parser.add_argument('notebook',
                     help='Path to the notebook file to open')
 parser.add_argument('--debug', action='store_true', default=False,
                     help='Enable debug mode')
 parser.add_argument('--port', type=int, default=8080,
                     help='Port to run the server on')
-parser.add_argument('--kernel', choices=['jupyter', 'snapshot'], default='jupyter',
+parser.add_argument('--kernel', choices=['jupyter', 'snapshot'], default='snapshot',
                     help='Kernel backend to use (jupyter or snapshot)')
 args = parser.parse_args()
 
