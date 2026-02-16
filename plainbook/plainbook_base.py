@@ -200,7 +200,6 @@ class PlainbookAbstract(abc.ABC):
             self.nb.metadata['missing_input_files'] = missing_input_files
 
     def _write(self):
-        self.nb.metadata['last_executed_cell'] = self.last_executed_cell
         self.nb.metadata['last_valid_code_cell'] = self.last_valid_code_cell
         self.nb.metadata['last_valid_output'] = self.last_valid_output_cell
         with open(self.path, "w") as f:
