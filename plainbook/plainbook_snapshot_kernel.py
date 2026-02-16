@@ -17,9 +17,10 @@ from .plainbook_base import (
 class Plainbook_SnapshotKernel(PlainbookAbstract):
     """Plainbook implementation using the snapshot kernel.
 
-    Each cell stores the snapshot state it produced in cell.metadata['snapshot_state']
-    as a UUID. Re-execution starts from the snapshot before the affected cell
-    rather than requiring a full kernel restart.
+    Snapshot state names are stored in an in-memory dictionary (self._cell_states)
+    mapping cell.id to state name. This avoids persisting stale state names to disk
+    when the notebook is saved. Re-execution starts from the snapshot before the
+    affected cell rather than requiring a full kernel restart.
     """
 
     def __init__(self, notebook_path, debug=False):
@@ -28,6 +29,7 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
         self._sk_port = self._find_free_port(start=9100)
         self._sk_base_url = f"http://127.0.0.1:{self._sk_port}"
         self._current_exec_id = None
+        self._cell_states = {}
         self._sk_process = subprocess.Popen(
             [sys.executable, "-m", "snapshot_kernel.main",
              "--bind", f"127.0.0.1:{self._sk_port}",
@@ -94,8 +96,8 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
         Returns 'initial' if no previous code cell has been executed."""
         for i in range(index - 1, -1, -1):
             cell = self.nb.cells[i]
-            if cell.cell_type == 'code':
-                state = cell.metadata.get('snapshot_state')
+            if cell.cell_type == 'code' and i <= self.last_executed_cell:
+                state = self._cell_states.get(cell.id)
                 if state:
                     return state
         return "initial"
@@ -120,7 +122,15 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
                     raise ExecutionError("Cannot execute cell out of order")
 
             input_state = self._find_input_state(index)
-            new_state_name = uuid.uuid4().hex
+            cell_id = cell.id
+            if cell_id in self._cell_states:
+                new_state_name = self._cell_states[cell_id]
+            else:
+                new_state_name = uuid.uuid4().hex
+                existing_names = set(self._cell_states.values())
+                while new_state_name in existing_names:
+                    new_state_name = uuid.uuid4().hex
+                self._cell_states[cell_id] = new_state_name
             exec_id = uuid.uuid4().hex
             self._current_exec_id = exec_id
 
@@ -161,8 +171,7 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
                     evalue=err.get("evalue", ""),
                 )
 
-            # Success: store state
-            cell.metadata['snapshot_state'] = new_state_name
+            # Success: update execution pointer
             self.last_executed_cell = index
             self.last_valid_output_cell = max(index, self.last_valid_output_cell)
             # Get variables for AI context
@@ -172,12 +181,12 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
 
     def _get_variables(self):
         """Execute the variable inspection code against the last executed state."""
-        # Find the most recent state
+        # Find the most recent valid state
         state_name = None
         for i in range(len(self.nb.cells) - 1, -1, -1):
             cell = self.nb.cells[i]
-            if cell.cell_type == 'code':
-                state_name = cell.metadata.get('snapshot_state')
+            if cell.cell_type == 'code' and i <= self.last_executed_cell:
+                state_name = self._cell_states.get(cell.id)
                 if state_name:
                     break
         if not state_name:
@@ -214,9 +223,7 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
         """Reset the snapshot kernel: clear all states, reset pointers."""
         self._sk_request("POST", "/reset")
         self.last_executed_cell = -1
-        # Clear snapshot_state from all cell metadata
-        for cell in self.nb.cells:
-            cell.metadata.pop('snapshot_state', None)
+        self._cell_states.clear()
         if self.debug:
             print("Snapshot kernel reset complete.")
 
@@ -225,16 +232,17 @@ class Plainbook_SnapshotKernel(PlainbookAbstract):
         self._invalidate_from(index)
 
     def _invalidate_from(self, index):
-        """Delete snapshot states from cell index onward."""
+        """Delete snapshot states from cell index onward.
+        Dict entries are kept so state names can be reused on re-execution."""
         for i in range(index, len(self.nb.cells)):
             cell = self.nb.cells[i]
-            state_name = cell.metadata.get('snapshot_state')
+            state_name = self._cell_states.get(cell.id)
             if state_name:
                 try:
                     self._sk_request("DELETE", f"/states/{state_name}")
                 except Exception:
                     pass
-                cell.metadata.pop('snapshot_state', None)
+                # Keep dict entry — name will be reused on re-execution
         self.last_executed_cell = min(self.last_executed_cell, index - 1)
 
     def interrupt_kernel(self):

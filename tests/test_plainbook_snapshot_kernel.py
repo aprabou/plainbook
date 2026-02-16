@@ -308,18 +308,19 @@ class TestSnapshotKernelSpecific:
         notebook.execute_cell(1)
         notebook.execute_cell(2)
 
-        state_0 = notebook.nb.cells[0].metadata.get('snapshot_state')
+        state_0 = notebook._cell_states.get(notebook.nb.cells[0].id)
         assert state_0 is not None
-        assert notebook.nb.cells[1].metadata.get('snapshot_state') is not None
-        assert notebook.nb.cells[2].metadata.get('snapshot_state') is not None
+        assert notebook._cell_states.get(notebook.nb.cells[1].id) is not None
+        assert notebook._cell_states.get(notebook.nb.cells[2].id) is not None
 
         # Edit cell 1 -> invalidates cells 1-2, preserves cell 0
         notebook.set_cell_source(1, 'y = x + 10')
         notebook.last_valid_code_cell = max(notebook.last_valid_code_cell, 1)
 
-        assert notebook.nb.cells[0].metadata.get('snapshot_state') == state_0
-        assert 'snapshot_state' not in notebook.nb.cells[1].metadata
-        assert 'snapshot_state' not in notebook.nb.cells[2].metadata
+        # Cell 0's state is preserved
+        assert notebook._cell_states.get(notebook.nb.cells[0].id) == state_0
+        # Cells 1-2 keep their dict entries (for name reuse), but
+        # last_executed_cell == 0 means they are not valid in the kernel
         assert notebook.last_executed_cell == 0
 
     def test_reexecute_from_snapshot(self, notebook):
@@ -343,22 +344,21 @@ class TestSnapshotKernelSpecific:
         assert '11' in text
 
     def test_snapshot_state_stored_after_execution(self, notebook):
-        """Each executed code cell stores its snapshot_state UUID."""
+        """Each executed code cell stores its state name in _cell_states."""
         _add_code_cell(notebook, 'x = 1')
-        assert 'snapshot_state' not in notebook.nb.cells[0].metadata
+        assert notebook._cell_states.get(notebook.nb.cells[0].id) is None
         notebook.execute_cell(0)
-        assert notebook.nb.cells[0].metadata.get('snapshot_state') is not None
+        assert notebook._cell_states.get(notebook.nb.cells[0].id) is not None
 
     def test_reset_clears_all_snapshot_states(self, notebook):
-        """reset_kernel clears snapshot_state from all cells."""
+        """reset_kernel clears _cell_states dictionary."""
         _add_code_cell(notebook, 'x = 1')
         _add_code_cell(notebook, 'y = 2')
         notebook.execute_cell(0)
         notebook.execute_cell(1)
-        assert notebook.nb.cells[0].metadata.get('snapshot_state') is not None
+        assert notebook._cell_states.get(notebook.nb.cells[0].id) is not None
 
         notebook.reset_kernel()
 
-        assert 'snapshot_state' not in notebook.nb.cells[0].metadata
-        assert 'snapshot_state' not in notebook.nb.cells[1].metadata
+        assert len(notebook._cell_states) == 0
         assert notebook.last_executed_cell == -1

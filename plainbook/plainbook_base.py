@@ -180,7 +180,7 @@ class PlainbookAbstract(abc.ABC):
             self.nb.metadata['is_locked'] = False
             with open(self.path, "w") as f:
                 nbformat.write(self.nb, f)
-        self.last_executed_cell = self.nb.metadata.get('last_executed_cell', -1)
+        self.last_executed_cell = -1 # When we load, we need to re-execute from the start. 
         self.last_valid_code_cell = self.nb.metadata.get('last_valid_code_cell', -1)
         self.last_valid_output_cell = self.nb.metadata.get('last_valid_output', -1)
 
