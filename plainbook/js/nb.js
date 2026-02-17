@@ -584,7 +584,9 @@ createApp({
 
         const handleClickOutside = (event) => {
             const container = document.querySelector('.notebook-container');
-            if (container && !container.contains(event.target)) {
+            const navbar = document.querySelector('.navbar');
+            if (container && !container.contains(event.target) &&
+                !(navbar && navbar.contains(event.target))) {
                 activeIndex.value = -1;
             }
         };
