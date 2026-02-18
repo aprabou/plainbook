@@ -15,9 +15,9 @@ export default {
     props: ['cell', 'isActive', 'isLocked', 'codeValid', 'outputValid', 'executed', 
         'asRead', 'markdownEditKey', 'explanationEditKey'],
     emits: [
-        'save-markdown', 'save-explanation', 'save-code', 
-        'run-cell', 'save-and-run', 'generate-code', 
-        'validate-code', 'dismiss-validation', 
+        'save-markdown', 'save-explanation', 'save-code',
+        'run-cell', 'save-and-run', 'generate-code', 'clear-code',
+        'validate-code', 'dismiss-validation',
         'delete', 'move-up', 'move-down'
     ],
     setup(props, { emit }) {
@@ -61,7 +61,8 @@ export default {
                         :hasError="hasError"
                         :start-edit-key="explanationEditKey"
                         @save="$emit('save-explanation', $event)" 
-                        @gencode="$emit('generate-code')" 
+                        @gencode="$emit('generate-code')"
+                        @clearcode="$emit('clear-code')"
                         @validate="$emit('validate-code')"
                         @run="$emit('run-cell')"
                         @saveandrun="$emit('save-and-run', $event)"

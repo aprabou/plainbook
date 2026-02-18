@@ -218,6 +218,15 @@ def edit_code():
     notebook.set_cell_source(cell_index, source)
     return dict(status='success')
 
+@post('/clear_code')
+@stateful
+@require_token
+def clear_code():
+    data = request.json
+    cell_index = data.get('cell_index')
+    notebook.clear_cell_code(cell_index)
+    return dict(status='success')
+
 @post('/edit_markdown')
 @stateful
 @require_token

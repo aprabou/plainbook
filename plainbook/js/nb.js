@@ -210,6 +210,20 @@ createApp({
             return savePromise;
         };
 
+        const clearCellCode = async (cellIndex) => {
+            asRead.value = false;
+            try {
+                const r = await apiCall('/clear_code', 'POST', { cell_index: cellIndex });
+                if (notebook.value && notebook.value.cells[cellIndex]) {
+                    notebook.value.cells[cellIndex].source = '';
+                    notebook.value.cells[cellIndex].outputs = [];
+                }
+                console.log('Code cleared:', cellIndex);
+            } catch (err) {
+                throw new Error('Failed to clear code', { cause: err });
+            }
+        };
+
         const sendMarkdownToServer = async (content, cellIndex) => {
             asRead.value = false;
             try {
@@ -604,7 +618,7 @@ createApp({
 
         return { notebook, notebook_name, loading, error, isLocked, lockNotebook,
             sendExplanationToServer, authToken,
-            sendCodeToServer, ui_saveExplanationAndRun,
+            sendCodeToServer, clearCellCode, ui_saveExplanationAndRun,
             sendMarkdownToServer, generateCode, activeIndex, reloadNotebook,
             validateCode, dismissValidation, ui_resetAndRunAllCells, ui_forceRegenerateCellCode,
             setActiveCell, ui_runCell, running, asRead,

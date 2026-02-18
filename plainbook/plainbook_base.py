@@ -362,6 +362,20 @@ class PlainbookAbstract(abc.ABC):
             self._write()
 
 
+    def clear_cell_code(self, index):
+        """Clears the source code of a code cell and marks its code as invalid."""
+        with self._lock:
+            assert 0 <= index < len(self.nb.cells)
+            cell = self.nb.cells[index]
+            assert cell.cell_type == 'code'
+            cell.source = ''
+            cell.outputs = []
+            if index <= self.last_executed_cell:
+                self._invalidate_execution(index)
+            self.last_valid_code_cell = min(self.last_valid_code_cell, index - 1)
+            self.last_valid_output_cell = min(self.last_valid_output_cell, index - 1)
+            self._write()
+
     def set_cell_explanation(self, index, explanation):
         """Sets the explanation of a code cell at the given index."""
         with self._lock:

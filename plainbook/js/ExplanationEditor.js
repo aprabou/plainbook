@@ -5,7 +5,7 @@ import CellStateButton from './CellStateButton.js';
 const ExplanationRenderer = {
     props: ['source', 'isActive', 'codeValid', 'outputValid', 'executed', 'hasError',
             'asRead', 'startEditKey', 'isLocked', 'hasCode'],
-    emits: ['update:source', 'save', 'saveandrun', 'gencode', 'validate', 
+    emits: ['update:source', 'save', 'saveandrun', 'gencode', 'clearcode', 'validate',
             'run', 'delete', 'moveUp', 'moveDown'],
     components: { CellStateButton },
     setup(props, { emit }) {    
@@ -150,10 +150,17 @@ const ExplanationRenderer = {
                     <span class="icon"><i class="bx bx-arrow-down"></i></span>
                 </button>
                 <button class="button is-small"
-                        :class="hasError ? 'is-warning' : 'is-success'" 
-                        title="Regenerate code from description" 
+                        :class="hasError ? 'is-warning' : 'is-success'"
+                        title="Clear code"
+                        :disabled="localIsLocked || !hasCode" @click.stop="$emit('clearcode')">
+                    <span class="icon"><i class="bx bx-eraser"></i></span>
+                    <span>Clear Code</span>
+                </button>
+                <button class="button is-small"
+                        :class="hasError ? 'is-warning' : 'is-success'"
+                        title="Regenerate code from description"
                         :disabled="localIsLocked" @click.stop="$emit('gencode')">
-                    <span class="icon"><i class="bx bx-repeat"></i></span> 
+                    <span class="icon"><i class="bx bx-repeat"></i></span>
                     <span v-if="hasError">Fix Code</span>
                     <span v-else>Regenerate Code</span>
                 </button>
