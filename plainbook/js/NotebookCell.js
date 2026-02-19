@@ -1,4 +1,4 @@
-import { computed } from './vue.esm-browser.js';
+import { ref, computed } from './vue.esm-browser.js';
 
 // NotebookCell.js
 import MarkdownCell from './MarkdownCell.js';
@@ -27,7 +27,9 @@ export default {
             return props.cell.outputs.some(out => out.output_type === 'error');
         });
 
-        return { hasError };
+        const outputVisible = ref(true);
+
+        return { hasError, outputVisible };
     },
     template: /* html */ `
         <div class="notebook-cell box p-0 mb-2 is-clipped shadow-sm"
@@ -59,8 +61,10 @@ export default {
                         :outputValid="outputValid"
                         :executed="executed"
                         :hasError="hasError"
+                        :outputVisible="outputVisible"
                         :start-edit-key="explanationEditKey"
-                        @save="$emit('save-explanation', $event)" 
+                        @save="$emit('save-explanation', $event)"
+                        @toggle-output="outputVisible = !outputVisible"
                         @gencode="$emit('generate-code')"
                         @clearcode="$emit('clear-code')"
                         @validate="$emit('validate-code')"
@@ -88,7 +92,7 @@ export default {
                     :asRead="asRead"
                     @save="$emit('save-code', $event)" />
                 
-                <div v-if="cell.outputs?.length" class="p-2 border-top has-background-white">
+                <div v-if="outputVisible && cell.outputs?.length" class="p-2 border-top has-background-white">
                     <output-renderer v-for="(out, oIdx) in cell.outputs" :key="oIdx" :output="out" />
                 </div>
             </div>

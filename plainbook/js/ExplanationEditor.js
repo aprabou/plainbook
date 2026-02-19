@@ -4,9 +4,9 @@ import CellStateButton from './CellStateButton.js';
 
 const ExplanationRenderer = {
     props: ['source', 'isActive', 'codeValid', 'outputValid', 'executed', 'hasError',
-            'asRead', 'startEditKey', 'isLocked', 'hasCode'],
+            'asRead', 'startEditKey', 'isLocked', 'hasCode', 'outputVisible'],
     emits: ['update:source', 'save', 'saveandrun', 'gencode', 'clearcode', 'validate',
-            'run', 'delete', 'moveUp', 'moveDown'],
+            'run', 'delete', 'moveUp', 'moveDown', 'toggle-output'],
     components: { CellStateButton },
     setup(props, { emit }) {    
         const isEditing = ref(false);
@@ -133,6 +133,13 @@ const ExplanationRenderer = {
                 :output-valid="outputValid" 
                 :as-read="asRead" 
                 :has-error="hasError" />
+                <button class="button is-small" style="opacity: 0.6;"
+                        title="Toggle output visibility"
+                        @click.stop="$emit('toggle-output')">
+                    <span class="icon">
+                        <i :class="outputVisible ? 'bx bx-eye-slash' : 'bx bx-eye'"></i>
+                    </span>
+                </button>
             </div>
             <div class="toolbar-right" style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
                 <button class="button is-small is-info" title="Edit action description" 
