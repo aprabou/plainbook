@@ -143,7 +143,10 @@ pre[class*="language-"] {
   color: #777;
   padding-left: 0.5rem;
   margin-bottom: -0.2rem;
+  margin-top: -0.75rem;
   user-select: none;
+  position: relative;
+  z-index: 1;
 }
 
 .button .bx {
