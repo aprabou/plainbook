@@ -187,14 +187,18 @@ createApp({
             asRead.value = false;
             const savePromise = (async () => {
                 try {
-                    await apiCall('/edit_explanation', 'POST', {
+                    const response = await apiCall('/edit_explanation', 'POST', {
                         cell_index: cellIndex,
                         explanation: content
                     });
                     if (notebook.value && notebook.value.cells[cellIndex]) {
                         notebook.value.cells[cellIndex].metadata.explanation = content;
+                        if (response.cell_name) {
+                            notebook.value.cells[cellIndex].metadata.name = response.cell_name;
+                        }
                     }
                     console.log('Explanation saved:', cellIndex);
+                    return response;
                 } catch (err) {
                     throw new Error('Failed to save explanation', { cause: err });
                 }
@@ -481,7 +485,13 @@ createApp({
         // The important fact is that these cannot be re-entrant.
 
         const ui_saveExplanationAndRun = async (content, cellIndex) => {
-            await sendExplanationToServer(content, cellIndex);
+            const response = await sendExplanationToServer(content, cellIndex);
+            // Defensive: ensure cell name is stored even if a concurrent
+            // blur-triggered save consumed the name from a parallel request.
+            if (response && response.cell_name
+                    && notebook.value && notebook.value.cells[cellIndex]) {
+                notebook.value.cells[cellIndex].metadata.name = response.cell_name;
+            }
             if (!running.value) {
                 running.value = true;
                 await generateCode(cellIndex);

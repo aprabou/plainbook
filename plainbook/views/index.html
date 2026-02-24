@@ -90,7 +90,7 @@
 
                     <cell-label
                         v-if="cell.cell_type === 'code'"
-                        :label="'Cell ' + (index + 1)"
+                        :name="cell.metadata.name"
                     />
 
                     <notebook-cell

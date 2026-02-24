@@ -4,16 +4,17 @@ import copy
 import datetime
 import json
 import os
+import re
 import threading
 
 import nbformat
 
-from .gemini import gemini_generate_code, gemini_validate_code
-from .claude import claude_generate_code, claude_validate_code
+from .gemini import gemini_generate_code, gemini_validate_code, gemini_generate_cell_name
+from .claude import claude_generate_code, claude_validate_code, claude_generate_cell_name
 
 AI_PROVIDERS = {
-    "gemini": {"generate": gemini_generate_code, "validate": gemini_validate_code},
-    "claude": {"generate": claude_generate_code, "validate": claude_validate_code},
+    "gemini": {"generate": gemini_generate_code, "validate": gemini_validate_code, "name": gemini_generate_cell_name},
+    "claude": {"generate": claude_generate_code, "validate": claude_validate_code, "name": claude_generate_cell_name},
 }
 
 
@@ -629,6 +630,54 @@ class PlainbookAbstract(abc.ABC):
             context_parts.append(f"* File name: {file['name']} path: {file['path']}\n")
         return "\n".join(context_parts) + "\n"
 
+
+    def _get_existing_cell_names(self):
+        """Returns a set of all cell names currently in the notebook.
+        Must be called with self._lock held."""
+        names = set()
+        for cell in self.nb.cells:
+            name = cell.metadata.get('name')
+            if name:
+                names.add(name)
+        return names
+
+    def _make_unique_name(self, name, existing_names):
+        """Appends _1, _2, etc. if name already exists."""
+        if name not in existing_names:
+            return name
+        counter = 1
+        while f"{name}_{counter}" in existing_names:
+            counter += 1
+        return f"{name}_{counter}"
+
+    def generate_cell_name(self, api_key, index, ai_provider, model=None):
+        """Generates a unique name for a code cell based on its explanation."""
+        with self._lock:
+            cell = self.nb.cells[index]
+            if cell.metadata.get('name'):
+                return cell.metadata['name']  # Already has a name
+            explanation = cell.metadata.get('explanation', '')
+            if not explanation.strip():
+                return None
+            name_fn = AI_PROVIDERS[ai_provider]["name"]
+        # Call AI outside the lock (network I/O)
+        raw_name = name_fn(api_key, explanation, model=model, debug=self.debug)
+        # Sanitize: split into words, keep first 3, lowercase, remove punctuation, join with underscores
+        words = raw_name.split()[:3]
+        words = [re.sub(r'[^a-z0-9]', '', w.lower()) for w in words]
+        words = [w for w in words if w]  # Remove empty strings
+        sanitized = '_'.join(words)
+        if not sanitized:
+            sanitized = 'cell'
+        with self._lock:
+            # Re-check in case another thread set it
+            if cell.metadata.get('name'):
+                return cell.metadata['name']
+            existing = self._get_existing_cell_names()
+            unique_name = self._make_unique_name(sanitized, existing)
+            cell.metadata['name'] = unique_name
+            self._write()
+            return unique_name
 
     def _get_error_context(self, cell_index):
         """If the cell has an error, include its traceback as context."""

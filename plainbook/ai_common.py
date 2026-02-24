@@ -19,6 +19,18 @@ To display Pandas dataframes, you can simply return the dataframe variable name,
 and the notebook will render it appropriately.
 """
 
+NAME_GENERATION_INSTRUCTIONS = """You need to summarize what a notebook cell does using two or three words.
+You will be given the cell's explanation, which describes what the cell does.
+Please return at least 2 words, and at most 3. Return only these words."""
+
+
+def build_name_prompt(explanation):
+    """Builds the prompt for cell name generation."""
+    return f"""This is the cell explanation:
+{explanation}
+
+Summarize what this cell does in 2-3 words:"""
+
 CHECKING_INSTRUCTIONS = """
 You are an assistant that validates Python code for Jupyter cells.
 Your task is to check whether a Jupyter notebook cell does what it specified in its instructions.

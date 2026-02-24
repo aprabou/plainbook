@@ -4,7 +4,9 @@ from google.genai import types
 from .ai_common import (
     SYSTEM_INSTRUCTIONS,
     CHECKING_INSTRUCTIONS,
+    NAME_GENERATION_INSTRUCTIONS,
     build_context_prompt,
+    build_name_prompt,
     parse_validation_response,
     strip_markdown_code_fences,
 )
@@ -44,7 +46,7 @@ INSTRUCTIONS for New Cell:
 Code:
 """
 
-    if debug:
+    if debug and False:  # Don't print the prompt for generation by default since it can be very long
         print("Prompt:", prompt)
 
     # 3. Generate content
@@ -81,7 +83,7 @@ INSTRUCTIONS for Validation:
 Validation Result:
 """
 
-    if debug:
+    if debug and False:  # Don't print the prompt for validation by default since it can be very long
         print("Prompt:", prompt)
 
     response = client.models.generate_content(
@@ -94,3 +96,20 @@ Validation Result:
     if debug:
         print("Response:", response.text)
     return parse_validation_response(response.text)
+
+
+def gemini_generate_cell_name(api_key, explanation, model=None, debug=False):
+    client = genai.Client(api_key=api_key)
+    model = model or GEMINI_GENERATE_MODEL
+    prompt = build_name_prompt(explanation)
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=NAME_GENERATION_INSTRUCTIONS,
+            max_output_tokens=50,
+        ),
+    )
+    if debug:
+        print("Response to name generation:", response.text)
+    return response.text.strip()

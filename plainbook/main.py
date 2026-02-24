@@ -206,7 +206,18 @@ def edit_explanation():
     cell_index = data.get('cell_index')
     explanation = data.get('explanation')
     notebook.set_cell_explanation(cell_index, explanation)
-    return dict(status='success')
+    # Auto-generate cell name if not yet set
+    cell = notebook.nb.cells[cell_index]
+    cell_name = cell.metadata.get('name') if cell.cell_type == 'code' else None
+    if cell.cell_type == 'code' and not cell_name:
+        api_key, ai_provider, model, error = _get_ai_config()
+        if not error:
+            try:
+                cell_name = notebook.generate_cell_name(
+                    api_key, cell_index, ai_provider=ai_provider, model=model)
+            except Exception as e:
+                print(f"Warning: failed to generate cell name: {e}")
+    return dict(status='success', cell_name=cell_name)
 
 @post('/edit_code')
 @stateful

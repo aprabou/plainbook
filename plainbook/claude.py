@@ -3,7 +3,9 @@ import anthropic
 from .ai_common import (
     SYSTEM_INSTRUCTIONS,
     CHECKING_INSTRUCTIONS,
+    NAME_GENERATION_INSTRUCTIONS,
     build_context_prompt,
+    build_name_prompt,
     parse_validation_response,
     strip_markdown_code_fences,
 )
@@ -39,7 +41,7 @@ INSTRUCTIONS for New Cell:
 Code:
 """
 
-    if debug:
+    if debug and False:  # Don't print the prompt for generation by default since it can be very long
         print("Prompt:", prompt)
 
     message = client.messages.create(
@@ -74,7 +76,7 @@ INSTRUCTIONS for Validation:
 Validation Result:
 """
 
-    if debug:
+    if debug and False:  # Don't print the prompt for validation by default since it can be very long
         print("Prompt:", prompt)
 
     message = client.messages.create(
@@ -87,3 +89,19 @@ Validation Result:
     if debug:
         print("Response:", response_text)
     return parse_validation_response(response_text)
+
+
+def claude_generate_cell_name(api_key, explanation, model=None, debug=False):
+    client = anthropic.Anthropic(api_key=api_key)
+    model = model or CLAUDE_MODEL
+    prompt = build_name_prompt(explanation)
+    message = client.messages.create(
+        model=model,
+        max_tokens=50,
+        system=NAME_GENERATION_INSTRUCTIONS,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    response_text = message.content[0].text
+    if debug:
+        print("Response to name generation:", response_text)    
+    return response_text.strip()

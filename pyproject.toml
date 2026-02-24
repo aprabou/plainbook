@@ -23,7 +23,7 @@ dependencies = [
     "google-genai",
     "ipykernel",
     "jupyter_client",
-    "snapshot-kernel",
+    "snapshot-kernel>=0.1.3",
     "nbclient",
     "nbformat",
     "pyyaml",
