@@ -13,6 +13,31 @@ from .ai_common import (
 # CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 CLAUDE_MODEL = "claude-haiku-4-5-20251001"
 
+def get_claude_models(api_key):
+    """Fetches the latest model IDs for each Claude family (haiku, sonnet, opus)
+    from the Anthropic API. Returns a dict like {"haiku": "claude-haiku-...", ...}.
+    Models are returned most-recent-first by the API, so the first match per
+    family is the latest."""
+    client = anthropic.Anthropic(api_key=api_key)
+    families = {"haiku": None, "sonnet": None, "opus": None}
+    after_id = None
+    while True:
+        kwargs = {"limit": 100}
+        if after_id:
+            kwargs["after_id"] = after_id
+        page = client.models.list(**kwargs)
+        for model in page.data:
+            for family in families:
+                if families[family] is None and family in model.id:
+                    families[family] = model.id
+            if all(families.values()):
+                return families
+        if not page.has_more:
+            break
+        after_id = page.last_id
+    return families
+
+
 def claude_generate_code(
     api_key,
     preceding_code=None,

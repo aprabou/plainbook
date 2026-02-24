@@ -20,6 +20,8 @@ from bottle import run, default_app, request, TEMPLATE_PATH
 
 # Plainbook imports
 from .plainbook_base import ExecutionError
+from .claude import get_claude_models
+from .gemini import get_gemini_models
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
@@ -47,8 +49,72 @@ AI_PROVIDER_REGISTRY = [
     {"id": "gemini:3-pro",     "name": "Gemini 3 Pro",     "major": "gemini", "key_setting": "gemini_api_key", "model": "gemini-3-pro-preview"},
     {"id": "claude:haiku",     "name": "Claude Haiku",      "major": "claude", "key_setting": "claude_api_key", "model": "claude-haiku-4-5-20251001"},
     {"id": "claude:sonnet",    "name": "Claude Sonnet",     "major": "claude", "key_setting": "claude_api_key", "model": "claude-sonnet-4-5-20250929"},
-    {"id": "claude:opus",      "name": "Claude Opus",       "major": "claude", "key_setting": "claude_api_key", "model": "claude-opus-4-0-20250115"},
+    {"id": "claude:opus",      "name": "Claude Opus",       "major": "claude", "key_setting": "claude_api_key", "model": "claude-opus-4-20250514"},
 ]
+
+def _update_claude_models():
+    """Fetch latest Claude model IDs from the API and update the registry.
+    On success, saves the model IDs to settings. On failure, falls back
+    to previously saved model IDs."""
+    api_key = settings.get('claude_api_key')
+    if not api_key:
+        return
+    latest = None
+    try:
+        latest = get_claude_models(api_key)
+        # Save to settings for offline fallback
+        settings['claude_models'] = latest
+        with open(SETTINGS_FILE, 'w') as f:
+            yaml.dump(settings, f)
+        print(f"Updated Claude models: { {k: v for k, v in latest.items() if v} }")
+    except Exception as e:
+        print(f"Warning: could not fetch Claude models: {e}")
+        # Fall back to previously saved models
+        latest = settings.get('claude_models')
+        if latest:
+            print(f"Using cached Claude models: { {k: v for k, v in latest.items() if v} }")
+    if latest:
+        for provider in AI_PROVIDER_REGISTRY:
+            if provider['major'] != 'claude':
+                continue
+            family = provider['id'].split(':')[1]  # "haiku", "sonnet", or "opus"
+            if latest.get(family):
+                provider['model'] = latest[family]
+
+_update_claude_models()
+
+
+def _update_gemini_models():
+    """Fetch latest Gemini model IDs from the API and update the registry.
+    On success, saves the model IDs to settings. On failure, falls back
+    to previously saved model IDs."""
+    api_key = settings.get('gemini_api_key')
+    if not api_key:
+        return
+    # Derive families from registry (e.g. "gemini:2.5-flash" -> "2.5-flash")
+    families = [p['id'].split(':')[1] for p in AI_PROVIDER_REGISTRY if p['major'] == 'gemini']
+    latest = None
+    try:
+        latest = get_gemini_models(api_key, families)
+        settings['gemini_models'] = latest
+        with open(SETTINGS_FILE, 'w') as f:
+            yaml.dump(settings, f)
+        print(f"Updated Gemini models: { {k: v for k, v in latest.items() if v} }")
+    except Exception as e:
+        print(f"Warning: could not fetch Gemini models: {e}")
+        latest = settings.get('gemini_models')
+        if latest:
+            print(f"Using cached Gemini models: { {k: v for k, v in latest.items() if v} }")
+    if latest:
+        for provider in AI_PROVIDER_REGISTRY:
+            if provider['major'] != 'gemini':
+                continue
+            family = provider['id'].split(':')[1]
+            if latest.get(family):
+                provider['model'] = latest[family]
+
+_update_gemini_models()
+
 
 def _ensure_active_ai_provider():
     """Validate active_ai_provider setting; auto-select first available if invalid."""

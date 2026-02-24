@@ -12,6 +12,26 @@ from .ai_common import (
 )
 
 
+def get_gemini_models(api_key, families):
+    """Fetches latest Gemini model IDs for the given families from the API.
+    families: list of family keys like ["2.5-flash", "2.5-pro", "3-flash", "3-pro"]
+    Returns a dict mapping family key to model ID.
+    Prefers shorter model names (base aliases like "gemini-2.5-flash" over
+    versioned names like "gemini-2.5-flash-001")."""
+    client = genai.Client(api_key=api_key)
+    result = {f: None for f in families}
+    for model in client.models.list():
+        model_id = model.name
+        if model_id.startswith("models/"):
+            model_id = model_id[len("models/"):]
+        for family in families:
+            prefix = f"gemini-{family}"
+            if model_id.startswith(prefix):
+                if result[family] is None or len(model_id) < len(result[family]):
+                    result[family] = model_id
+    return result
+
+
 GEMINI_GENERATE_MODEL = "gemini-2.5-flash"
 GEMINI_VALIDATE_MODEL = "gemini-2.5-flash"
 
