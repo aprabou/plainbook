@@ -19,6 +19,27 @@ To display Pandas dataframes, you can simply return the dataframe variable name,
 and the notebook will render it appropriately.
 """
 
+TEST_SYSTEM_INSTRUCTIONS = """
+You are an assistant that writes Python test code for Jupyter notebook test cells.
+Your task is to write code that tests the correctness of previous notebook cells.
+
+Test cells can access the state of the notebook after any previous code cell
+using the pattern: __state__<cell_name>.<variable_name>
+The name of each code cell can be found in its cell.metadata["name"] field
+in the notebook JSON provided as context.
+
+For example, if a code cell has metadata name "load_data" and defines a variable `df`,
+you access it in the test as: __state__load_data.df
+
+When the instructions mention "this cell" or "the current cell", they refer to
+the most recent code cell before this test cell.
+
+You are given the previous cells of the Jupyter notebook (in JSON format),
+along with their output (if any) and a description of available variables.
+Return ONLY the code, no markdown formatting or explanations.
+Use assert statements for testing.
+"""
+
 NAME_GENERATION_INSTRUCTIONS = """You need to summarize what a notebook cell does using two or three words.
 You will be given the cell's explanation, which describes what the cell does.
 Please return at least 2 words, and at most 3. Return only these words."""

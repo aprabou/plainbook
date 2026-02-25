@@ -2,6 +2,7 @@ import anthropic
 
 from .ai_common import (
     SYSTEM_INSTRUCTIONS,
+    TEST_SYSTEM_INSTRUCTIONS,
     CHECKING_INSTRUCTIONS,
     NAME_GENERATION_INSTRUCTIONS,
     build_context_prompt,
@@ -73,6 +74,50 @@ Code:
         model=model,
         max_tokens=4096,
         system=SYSTEM_INSTRUCTIONS,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    response_text = message.content[0].text
+    if debug:
+        print("Response:", response_text)
+    code = strip_markdown_code_fences(response_text)
+    return code
+
+
+def claude_generate_test_code(
+    api_key,
+    preceding_code=None,
+    previous_code=None,
+    instructions=None,
+    file_context=None,
+    error_context=None,
+    variable_context=None,
+    validation_context=None,
+    model=None,
+    debug=False):
+    client = anthropic.Anthropic(api_key=api_key)
+    model = model or CLAUDE_MODEL
+
+    prompt = build_context_prompt(
+        preceding=preceding_code,
+        previous=previous_code,
+        file_context=file_context,
+        error_context=error_context,
+        variable_context=variable_context,
+        validation_context=validation_context)
+    prompt += f"""
+INSTRUCTIONS for Test Cell:
+{instructions}
+
+Code:
+"""
+
+    if debug and False:
+        print("Prompt:", prompt)
+
+    message = client.messages.create(
+        model=model,
+        max_tokens=4096,
+        system=TEST_SYSTEM_INSTRUCTIONS,
         messages=[{"role": "user", "content": prompt}],
     )
     response_text = message.content[0].text

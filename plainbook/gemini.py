@@ -3,6 +3,7 @@ from google.genai import types
 
 from .ai_common import (
     SYSTEM_INSTRUCTIONS,
+    TEST_SYSTEM_INSTRUCTIONS,
     CHECKING_INSTRUCTIONS,
     NAME_GENERATION_INSTRUCTIONS,
     build_context_prompt,
@@ -80,6 +81,50 @@ Code:
     if debug:
         print("Response:", response.text)
     # 4. Process the response
+    code = strip_markdown_code_fences(response.text)
+    return code
+
+
+def gemini_generate_test_code(
+    api_key,
+    preceding_code=None,
+    previous_code=None,
+    instructions=None,
+    file_context=None,
+    error_context=None,
+    variable_context=None,
+    validation_context=None,
+    model=None,
+    debug=False):
+    client = genai.Client(api_key=api_key)
+    model = model or GEMINI_GENERATE_MODEL
+
+    prompt = build_context_prompt(
+        preceding=preceding_code,
+        previous=previous_code,
+        file_context=file_context,
+        error_context=error_context,
+        variable_context=variable_context,
+        validation_context=validation_context)
+    prompt += f"""
+INSTRUCTIONS for Test Cell:
+{instructions}
+
+Code:
+"""
+
+    if debug and False:
+        print("Prompt:", prompt)
+
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=TEST_SYSTEM_INSTRUCTIONS
+        )
+    )
+    if debug:
+        print("Response:", response.text)
     code = strip_markdown_code_fences(response.text)
     return code
 

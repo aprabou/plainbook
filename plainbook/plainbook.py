@@ -15,12 +15,12 @@ import uuid
 import nbformat
 import requests
 
-from .gemini import gemini_generate_code, gemini_validate_code, gemini_generate_cell_name
-from .claude import claude_generate_code, claude_validate_code, claude_generate_cell_name
+from .gemini import gemini_generate_code, gemini_validate_code, gemini_generate_cell_name, gemini_generate_test_code
+from .claude import claude_generate_code, claude_validate_code, claude_generate_cell_name, claude_generate_test_code
 
 AI_PROVIDERS = {
-    "gemini": {"generate": gemini_generate_code, "validate": gemini_validate_code, "name": gemini_generate_cell_name},
-    "claude": {"generate": claude_generate_code, "validate": claude_validate_code, "name": claude_generate_cell_name},
+    "gemini": {"generate": gemini_generate_code, "validate": gemini_validate_code, "name": gemini_generate_cell_name, "generate_test": gemini_generate_test_code},
+    "claude": {"generate": claude_generate_code, "validate": claude_validate_code, "name": claude_generate_cell_name, "generate_test": claude_generate_test_code},
 }
 
 
@@ -833,14 +833,55 @@ class Plainbook:
 
 
     def generate_test_code(self, api_key, index, ai_provider="gemini", model=None, validation_feedback=None):
-        """Generates test code for a test cell. Stub for now."""
+        """Generates test code for a test cell using the specified AI provider."""
         with self._lock:
             assert 0 <= index < len(self.nb.cells)
             cell = self.nb.cells[index]
             assert cell.cell_type == 'test'
-            self.last_valid_test_cell = index
-            self._write()
-            return cell.source, True
+            # We need the previous code cells to have valid output so the AI
+            # has variable context available.
+            last_code_cell_idx = -1
+            for i in range(index - 1, -1, -1):
+                if self.nb.cells[i].cell_type == 'code':
+                    last_code_cell_idx = i
+                    break
+            if last_code_cell_idx > 0 and self.last_valid_output_cell < last_code_cell_idx:
+                raise RuntimeError("Cannot generate test code: previous output must be valid.")
+            # Build context for the AI.
+            instructions = cell.metadata.get('explanation')
+            files_context = self._get_files_context()
+            error_context = self._get_error_context(index)
+            variable_context = self._get_variables_for_ai(index)
+            preceding_code = self._get_preceding_code_json_for_ai(index)
+            previous_code = self._get_cell_code_for_ai(index)
+            # Mark that an AI request is pending.
+            if self.ai_request_pending:
+                raise RuntimeError("An AI request is already pending.")
+            try:
+                self.ai_request_pending = True
+                generate_fn = AI_PROVIDERS[ai_provider]["generate_test"]
+                new_code = generate_fn(
+                    api_key,
+                    preceding_code=preceding_code,
+                    previous_code=previous_code,
+                    instructions=instructions,
+                    file_context=files_context,
+                    error_context=error_context,
+                    variable_context=variable_context,
+                    validation_context=validation_feedback,
+                    model=model,
+                    debug=self.debug)
+                if self.ai_request_pending:
+                    cell.source = new_code
+                    cell.metadata['code_timestamp'] = datetime.datetime.now().isoformat()
+                    cell.outputs = []
+                    self.last_valid_test_cell = index
+                    self._write()
+                    return new_code, True
+                else:
+                    return None, False
+            finally:
+                self.ai_request_pending = False
 
     def execute_test_cell(self, index):
         """Executes a test cell. Stub for now."""
