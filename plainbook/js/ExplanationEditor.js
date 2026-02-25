@@ -106,13 +106,13 @@ const ExplanationRenderer = {
             isEditing.value = false;
         };
 
-        const clearLabel = computed(() => isTestCell.value ? 'Clear test' : 'Clear code');
+        const clearLabel = computed(() => isTestCell.value ? 'Clear code' : 'Clear code');
         const generateLabel = computed(() => {
-            if (props.hasError) return isTestCell.value ? 'Fix Test' : 'Fix Code';
-            if (props.hasCode) return isTestCell.value ? 'Regenerate test' : 'Regenerate code';
-            return isTestCell.value ? 'Generate test' : 'Generate code';
+            if (props.hasError) return isTestCell.value ? 'Fix Code' : 'Fix Code';
+            if (props.hasCode) return isTestCell.value ? 'Regenerate code' : 'Regenerate code';
+            return isTestCell.value ? 'Generate code' : 'Generate code';
         });
-        const validateLabel = computed(() => isTestCell.value ? 'Validate test' : 'Validate code');
+        const validateLabel = computed(() => isTestCell.value ? 'Validate code' : 'Validate code');
 
         return { isEditing, localSource, rendered, enterEditMode, saveChanges,
             cancelEdit, textareaEl, autoResize, saveAndRun, onBlur, localIsLocked,
@@ -133,7 +133,9 @@ const ExplanationRenderer = {
                 <button class="button run-button is-small mr-1"
                         :class="isTestCell ? 'is-warning' : 'is-primary'"
                         title="Run this cell and all necessary preceding cells" @click.stop="$emit('run')">
-                    <span class="icon"><i class="bx bx-play"></i></span><span>Run</span>
+                    <span class="icon"><i class="bx bx-play"></i></span>
+                    <span v-if="!isTestCell">Run</span>
+                    <span v-else>Run test</span>
                 </button>
                 <button class="button is-small" style="opacity: 0.6;"
                     title="Toggle output visibility"

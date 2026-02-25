@@ -36,6 +36,16 @@ CONFIG_DIR = Path.home() / ".config" / APP_NAME
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILE = CONFIG_DIR / "settings.yaml"
 
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Run the plainbook notebook server')
+parser.add_argument('notebook',
+                    help='Path to the notebook file to open')
+parser.add_argument('--debug', action='store_true', default=False,
+                    help='Enable debug mode')
+parser.add_argument('--port', type=int, default=8080,
+                    help='Port to run the server on')
+args = parser.parse_args()
+
 try:
     with open(SETTINGS_FILE, 'r') as f:
         settings = yaml.safe_load(f)
@@ -66,12 +76,13 @@ def _update_claude_models():
         settings['claude_models'] = latest
         with open(SETTINGS_FILE, 'w') as f:
             yaml.dump(settings, f)
-        print(f"Updated Claude models: { {k: v for k, v in latest.items() if v} }")
+        if args.debug:
+            print(f"Updated Claude models: { {k: v for k, v in latest.items() if v} }")
     except Exception as e:
         print(f"Warning: could not fetch Claude models: {e}")
         # Fall back to previously saved models
         latest = settings.get('claude_models')
-        if latest:
+        if latest and args.debug:
             print(f"Using cached Claude models: { {k: v for k, v in latest.items() if v} }")
     if latest:
         for provider in AI_PROVIDER_REGISTRY:
@@ -99,11 +110,12 @@ def _update_gemini_models():
         settings['gemini_models'] = latest
         with open(SETTINGS_FILE, 'w') as f:
             yaml.dump(settings, f)
-        print(f"Updated Gemini models: { {k: v for k, v in latest.items() if v} }")
+        if args.debug:
+            print(f"Updated Gemini models: { {k: v for k, v in latest.items() if v} }")
     except Exception as e:
         print(f"Warning: could not fetch Gemini models: {e}")
         latest = settings.get('gemini_models')
-        if latest:
+        if latest and args.debug:
             print(f"Using cached Gemini models: { {k: v for k, v in latest.items() if v} }")
     if latest:
         for provider in AI_PROVIDER_REGISTRY:
@@ -131,16 +143,6 @@ def _ensure_active_ai_provider():
     return None
 
 _ensure_active_ai_provider()
-
-# Parse command line arguments
-parser = argparse.ArgumentParser(description='Run the plainbook notebook server')
-parser.add_argument('notebook',
-                    help='Path to the notebook file to open')
-parser.add_argument('--debug', action='store_true', default=False,
-                    help='Enable debug mode')
-parser.add_argument('--port', type=int, default=8080,
-                    help='Port to run the server on')
-args = parser.parse_args()
 
 def _get_or_create_debug_token():
     """Return a stable debug token from settings, creating one if absent or stale (>24h)."""
