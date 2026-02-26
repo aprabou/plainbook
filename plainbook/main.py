@@ -533,6 +533,16 @@ def lock_notebook():
     return {}
 
 
+@post('/set_share_output')
+@stateful
+@require_token
+def set_share_output():
+    data = request.json
+    share = data.get('share', True)
+    notebook.set_share_output_with_ai(share)
+    return {}
+
+
 @get('/home_dir')
 @require_token
 def get_home_dir():

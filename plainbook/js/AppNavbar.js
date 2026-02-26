@@ -1,10 +1,10 @@
 export default {
     props: ['isLocked', 'running', 'runningActivity', 'hasNotebook', 'upToDate', 'cellCount', 'hasApiKey', 'debug',
-            'activeAiProvider', 'availableAiProviders'],
+            'activeAiProvider', 'availableAiProviders', 'shareOutputWithAi'],
     emits: [
         'lock', 'refresh', 'interrupt', 'regenerate-all',
         'reset-run-all', 'run-all', 'run-all-tests', 'clear-outputs', 'open-info', 'open-settings', 'debug-request',
-        'set-ai-provider'
+        'set-ai-provider', 'toggle-share-output'
         ],
     data() {
         return { aiDropdownOpen: false };
@@ -159,6 +159,13 @@ export default {
                         <button v-if="debug" class="button is-warning" title="Send debug request" @click="$emit('debug-request')">
                             <span class="icon"><i class="bx bx-bug"></i></span>
                             <span>Debug</span>
+                        </button>
+                        <button class="button" :class="shareOutputWithAi ? 'is-success' : 'is-light'"
+                                @click="$emit('toggle-share-output')"
+                                :title="shareOutputWithAi ? 'Cell outputs are shared with AI (click to disable)' : 'Cell outputs are NOT shared with AI (click to enable)'">
+                            <span class="icon">
+                                <i :class="shareOutputWithAi ? 'bx bx-shield' : 'bx bx-check-shield'"></i>
+                            </span>
                         </button>
                         <div ref="aiDropdown">
                             <div class="dropdown" :class="{'is-active': aiDropdownOpen}">

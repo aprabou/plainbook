@@ -28,6 +28,7 @@ createApp({
         const markdownEditKey = ref({});
         const explanationEditKey = ref({});
         const isLocked = ref(false);
+        const shareOutputWithAi = ref(true);
         const debug = ref(false);
         // For running a notebook.
         const running = ref(false);
@@ -117,6 +118,7 @@ createApp({
             last_valid_output_cell_index.value = state.last_valid_output_cell;
             last_valid_test_cell_index.value = state.last_valid_test_cell;
             isLocked.value = state.is_locked;
+            shareOutputWithAi.value = state.share_output_with_ai;
             if (notebook.value && notebook.value.metadata) {
                 notebook.value.metadata.is_locked = state.is_locked;
             }
@@ -221,6 +223,15 @@ createApp({
                 console.log('Notebook locked:', shouldLock);
             } catch (err) {
                 throw new Error('Failed to lock notebook', { cause: err });
+            }
+        };
+
+        const toggleShareOutput = async () => {
+            try {
+                const newVal = !shareOutputWithAi.value;
+                await apiCall('/set_share_output', 'POST', { share: newVal });
+            } catch (err) {
+                throw new Error('Failed to toggle output sharing', { cause: err });
             }
         };
 
@@ -785,7 +796,7 @@ createApp({
             window.removeEventListener('click', handleClickOutside);
         });
 
-        return { notebook, notebook_name, loading, error, isLocked, lockNotebook,
+        return { notebook, notebook_name, loading, error, isLocked, lockNotebook, shareOutputWithAi, toggleShareOutput,
             sendExplanationToServer, authToken,
             sendCodeToServer, clearCellCode, ui_saveExplanationAndRun,
             sendMarkdownToServer, generateCode, activeIndex, reloadNotebook,

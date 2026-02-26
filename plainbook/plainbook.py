@@ -398,6 +398,7 @@ class Plainbook:
             self.nb.metadata = {}
             self.nb.metadata['input_files'] = []
             self.nb.metadata['is_locked'] = False
+            self.nb.metadata['share_output_with_ai'] = True
             with open(self.path, "w") as f:
                 nbformat.write(self.nb, f)
         self.last_executed_cell = -1 # When we load, we need to re-execute from the start.
@@ -448,6 +449,7 @@ class Plainbook:
             'last_valid_output_cell': self.last_valid_output_cell,
             'last_valid_test_cell': self.last_valid_test_cell,
             'is_locked': self.nb.metadata.get('is_locked', False),
+            'share_output_with_ai': self.nb.metadata.get('share_output_with_ai', True),
         }
         if self.debug:
             print("State: ", json.dumps(state, indent=2))
@@ -481,6 +483,11 @@ class Plainbook:
             self.nb.metadata['is_locked'] = is_locked
             self._write()
 
+    def set_share_output_with_ai(self, share):
+        """Sets whether cell outputs are shared with AI."""
+        with self._lock:
+            self.nb.metadata['share_output_with_ai'] = share
+            self._write()
 
     def insert_cell(self, index, cell_type):
         """Insert a new cell at index with given type ('markdown', 'code', or 'test'). Returns the cell json."""
@@ -699,6 +706,8 @@ class Plainbook:
             explanation = ["# " + line for line in explanation.splitlines(keepends=True)]
             explanation_text = "".join(explanation) + "\n"
             new_cell.source = explanation_text + cell.source
+        if not self.nb.metadata.get('share_output_with_ai', True):
+            new_cell.outputs = []
         return new_cell
 
 
