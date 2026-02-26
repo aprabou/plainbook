@@ -974,7 +974,7 @@ class Plainbook:
         with self._lock:
             assert 0 <= cell_index < len(self.nb.cells)
             cell = self.nb.cells[cell_index]
-            assert cell.cell_type == 'code'
+            assert cell.cell_type in ('code', 'test'), f"Only code and test cells can have validation; got {cell.cell_type}"
             if 'validation' not in cell.metadata:
                 cell.metadata['validation'] = {}
             cell.metadata['validation']['is_hidden'] = is_hidden
