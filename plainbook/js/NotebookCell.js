@@ -8,7 +8,7 @@ import ValidationCell from './ValidationCell.js';
 import OutputRenderer from './OutputRenderer.js';
 export default {
     components: { MarkdownCell, CodeCell, ExplanationEditor, ValidationCell, OutputRenderer },
-    props: ['cell', 'isActive', 'isLocked', 'codeValid', 'outputValid', 'executed',
+    props: ['cell', 'isActive', 'isLocked', 'running', 'codeValid', 'outputValid', 'executed',
         'asRead', 'markdownEditKey', 'explanationEditKey', 'testCodeValid'],
     emits: [
         'save-markdown', 'save-explanation', 'save-code',
@@ -50,11 +50,12 @@ export default {
 
             <div v-else-if="cell.cell_type === 'code'">
                 <div class="has-background-light p-0 border-bottom">
-                <explanation-editor 
+                <explanation-editor
                         v-model:source="cell.metadata.explanation"
                         :hasCode="(cell.source || '').trim().length > 0"
-                        :isActive="isActive" 
-                        :isLocked="isLocked" 
+                        :isActive="isActive"
+                        :isLocked="isLocked"
+                        :running="running"
                         :asRead="asRead"
                         :codeValid="codeValid"
                         :outputValid="outputValid"
@@ -104,6 +105,7 @@ export default {
                         :hasCode="(cell.source || '').trim().length > 0"
                         :isActive="isActive"
                         :isLocked="isLocked"
+                        :running="running"
                         :asRead="asRead"
                         :codeValid="testCodeValid"
                         :outputValid="testCodeValid"

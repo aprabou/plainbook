@@ -2,7 +2,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from './vu
 
 const ExplanationRenderer = {
     props: ['source', 'isActive', 'codeValid', 'outputValid', 'executed', 'hasError',
-            'asRead', 'startEditKey', 'isLocked', 'hasCode', 'outputVisible', 'cellMode'],
+            'asRead', 'startEditKey', 'isLocked', 'running', 'hasCode', 'outputVisible', 'cellMode'],
     emits: ['update:source', 'save', 'saveandrun', 'gencode', 'clearcode', 'validate',
             'run', 'delete', 'moveUp', 'moveDown', 'toggle-output', 'open-test-help'],
     setup(props, { emit }) {
@@ -106,6 +106,15 @@ const ExplanationRenderer = {
             isEditing.value = false;
         };
 
+        const generating = ref(false);
+        const onGenCode = () => {
+            generating.value = true;
+            emit('gencode');
+        };
+        watch(() => props.running, (val) => {
+            if (!val) generating.value = false;
+        });
+
         const clearLabel = computed(() => isTestCell.value ? 'Clear code' : 'Clear code');
         const generateLabel = computed(() => {
             if (props.hasError) return isTestCell.value ? 'Fix Code' : 'Fix Code';
@@ -116,7 +125,7 @@ const ExplanationRenderer = {
 
         return { isEditing, localSource, rendered, enterEditMode, saveChanges,
             cancelEdit, textareaEl, autoResize, saveAndRun, onBlur, localIsLocked,
-            isTestCell, clearLabel, generateLabel, validateLabel };
+            isTestCell, clearLabel, generateLabel, validateLabel, generating, onGenCode };
     },
 
     template: /* html */ `
@@ -132,6 +141,7 @@ const ExplanationRenderer = {
             <div class="toolbar-left">
                 <button class="button run-button is-small mr-1"
                         :class="isTestCell ? 'is-warning' : 'is-primary'"
+                        :disabled="running"
                         title="Run this cell and all necessary preceding cells" @click.stop="$emit('run')">
                     <span class="icon"><i class="bx bx-play"></i></span>
                     <span v-if="!isTestCell">Run</span>
@@ -177,9 +187,9 @@ const ExplanationRenderer = {
                 </button>
                 <button class="button is-small"
                         :class="isTestCell ? 'is-warning' : 'is-success'"
-                        title="Generate code from description"
-                        :disabled="localIsLocked || !localSource.trim()" @click.stop="$emit('gencode')">
-                    <span class="icon"><i class="bx bx-cognition"></i></span>
+                        title="Generate or regenerate the code"
+                        :disabled="running || localIsLocked || !localSource.trim()" @click.stop="onGenCode">
+                    <span class="icon"><i class="bx bx-cognition" :class="{'bx-spin': generating}"></i></span>
                     <span>{{ generateLabel }}</span>
                 </button>
                 <button :disabled="!codeValid" class="button is-small" 
