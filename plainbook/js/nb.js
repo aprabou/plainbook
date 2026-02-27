@@ -107,6 +107,15 @@ createApp({
             }
             console.log(display);
             uiError.value = err.message || String(err);
+            // Scroll to the cell that caused the error, if known.
+            if (err.cellIndex != null) {
+                nextTick(() => {
+                    const cells = document.querySelectorAll('.notebook-cell');
+                    if (cells[err.cellIndex]) {
+                        cells[err.cellIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
         };
 
         const updateState = (state) => {
@@ -490,13 +499,16 @@ createApp({
                 if (r.details === 'CellExecutionError') {
                     // The cell executed, but we have to stop other further
                     // cells from executing.
+                    let err;
                     if(r.outputs[0].ename === 'ModuleNotFoundError') {
-                        throw new Error('A package is required by this code cell. Please install the necessary packages via this command on your local environment: pip install ' + r.outputs[0].evalue.split("'")[1]);
+                        err = new Error('A package is required by this code cell. Please install the necessary packages via this command on your local environment: pip install ' + r.outputs[0].evalue.split("'")[1]);
                     } else if (r.outputs[0].ename === 'FileNotFoundError') {
-                        throw new Error('The notebook cannot find a file it needs. Please select all the required input files using the selector at the top, so that the AI knows where to find them, and re-generate the code. If the files are already selected, you might want to refer to them in a more precise way, for instance citing their full name.');
+                        err = new Error('The notebook cannot find a file it needs. Please select all the required input files using the selector at the top, so that the AI knows where to find them, and re-generate the code. If the files are already selected, you might want to refer to them in a more precise way, for instance citing their full name.');
                     } else {
-                        throw new Error("Execution error: " + r.outputs[0].ename);
+                        err = new Error("Execution error: " + r.outputs[0].ename);
                     }
+                    err.cellIndex = cellIndex;
+                    throw err;
                 }
         };
 
@@ -645,7 +657,9 @@ createApp({
             asRead.value = false;
             const r = await apiCall('/execute_test_cell', 'POST', { cell_index: cellIndex });
             if (r.status === 'error') {
-                throw new Error(r.message || 'Test execution failed');
+                const err = new Error(r.message || 'Test execution failed');
+                err.cellIndex = cellIndex;
+                throw err;
             }
             if (r.outputs) {
                 cell.outputs = r.outputs;
@@ -778,7 +792,7 @@ createApp({
         const handleClickOutside = (event) => {
             if (event.target.closest('.modal')) return;
             const container = document.querySelector('.notebook-container');
-            const navbar = document.querySelector('.navbar');
+            const navbar = document.querySelector('.app-toolbar');
             if (container && !container.contains(event.target) &&
                 !(navbar && navbar.contains(event.target))) {
                 activeIndex.value = -1;

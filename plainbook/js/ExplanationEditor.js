@@ -169,20 +169,22 @@ const ExplanationRenderer = {
                     <span class="icon"><i class="bx bx-arrow-down"></i></span>
                 </button>
                 <button class="button is-small"
-                        :class="hasError ? 'is-warning' : 'is-success'"
+                        :class="isTestCell ? 'is-warning' : 'is-success'"
                         :title="clearLabel"
                         :disabled="localIsLocked || !hasCode" @click.stop="$emit('clearcode')">
                     <span class="icon"><i class="bx bx-eraser"></i></span>
                     <span>{{ clearLabel }}</span>
                 </button>
                 <button class="button is-small"
-                        :class="hasError ? 'is-warning' : 'is-success'"
+                        :class="isTestCell ? 'is-warning' : 'is-success'"
                         title="Generate code from description"
                         :disabled="localIsLocked || !localSource.trim()" @click.stop="$emit('gencode')">
                     <span class="icon"><i class="bx bx-cognition"></i></span>
                     <span>{{ generateLabel }}</span>
                 </button>
-                <button :disabled="!codeValid" class="button is-small is-success" title="Validate code against description" @click.stop="$emit('validate')">
+                <button :disabled="!codeValid" class="button is-small" 
+                        :class="isTestCell ? 'is-warning' : 'is-success'"
+                        title="Validate code against description" @click.stop="$emit('validate')">
                     <span class="icon"><i class="bx bx-check"></i></span> <span>{{ validateLabel }}</span>
                 </button>
                 <button class="button is-small is-danger py-1 " title="Delete cell" aria-label="Delete"
