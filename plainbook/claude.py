@@ -71,7 +71,11 @@ Code:
 """
 
     if debug:
-        log_ai_request_size("claude generate_code", SYSTEM_INSTRUCTIONS, prompt)
+        log_ai_request_size("claude generate_code", SYSTEM_INSTRUCTIONS, prompt,
+                            preceding=preceding_code, instructions=instructions,
+                            previous=previous_code, file_context=file_context,
+                            error_context=error_context, variable_context=variable_context,
+                            validation_context=validation_context)
     if dump_ai_requests:
         dump_ai_request("claude generate_code", SYSTEM_INSTRUCTIONS, prompt)
 
@@ -118,7 +122,11 @@ Code:
 """
 
     if debug:
-        log_ai_request_size("claude generate_test_code", TEST_SYSTEM_INSTRUCTIONS, prompt)
+        log_ai_request_size("claude generate_test_code", TEST_SYSTEM_INSTRUCTIONS, prompt,
+                            preceding=preceding_code, instructions=instructions,
+                            previous=previous_code, file_context=file_context,
+                            error_context=error_context, variable_context=variable_context,
+                            validation_context=validation_context)
     if dump_ai_requests:
         dump_ai_request("claude generate_test_code", TEST_SYSTEM_INSTRUCTIONS, prompt)
 
@@ -155,7 +163,9 @@ Validation Result:
 """
 
     if debug:
-        log_ai_request_size("claude validate_code", CHECKING_INSTRUCTIONS, prompt)
+        log_ai_request_size("claude validate_code", CHECKING_INSTRUCTIONS, prompt,
+                            preceding=previous_code, instructions=instructions,
+                            variable_context=variable_context)
     if dump_ai_requests:
         dump_ai_request("claude validate_code", CHECKING_INSTRUCTIONS, prompt)
 

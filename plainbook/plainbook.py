@@ -786,12 +786,13 @@ class Plainbook:
 
     def _get_preceding_code_json_for_ai(self, index, include_all_variables=True):
         """Returns the JSON representation of all previous code cells for context.
-        If include_all_variables is False, strip variables metadata from all cells
-        except the last code cell, to reduce token usage for action cells."""
+        If include_all_variables is False, strip variables metadata and outputs
+        from all cells except the last code cell, to reduce token usage for
+        action cells."""
         cells = [self._get_cell_json_for_ai(i) for i in range(index)
                  if self.nb.cells[i].cell_type != 'test']
         if not include_all_variables:
-            # Find the last code cell and strip variables from all others.
+            # Find the last code cell and strip variables/outputs from all others.
             last_code_idx = None
             for i in range(len(cells) - 1, -1, -1):
                 if cells[i].cell_type == 'code':
@@ -800,6 +801,7 @@ class Plainbook:
             for i, cell in enumerate(cells):
                 if cell.cell_type == 'code' and i != last_code_idx:
                     cell.metadata.pop('variables', None)
+                    cell.outputs = []
         nb = nbformat.v4.new_notebook()
         nb.cells = cells
         nb_json = nbformat.writes(nb, indent=4)

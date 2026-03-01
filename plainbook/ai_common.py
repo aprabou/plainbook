@@ -1,3 +1,4 @@
+import json
 import re
 import string
 
@@ -67,12 +68,73 @@ followed by a brief explanation.
 """
 
 
-def log_ai_request_size(label, system_instructions, prompt):
+def _chars_and_tokens(n):
+    """Format a char count with approximate token count."""
+    return f"{n} chars (~{n // CHARS_PER_TOKEN} tokens)"
+
+
+def _breakdown_preceding(preceding_json):
+    """Parse preceding notebook JSON and return char counts per category."""
+    if not preceding_json:
+        return {}
+    try:
+        nb = json.loads(preceding_json)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    description_chars = 0
+    code_chars = 0
+    output_chars = 0
+    variable_chars = 0
+    for cell in nb.get("cells", []):
+        cell_type = cell.get("cell_type", "")
+        source = cell.get("source", "")
+        outputs = cell.get("outputs", [])
+        metadata = cell.get("metadata", {})
+        if cell_type == "markdown":
+            description_chars += len(source)
+        elif cell_type == "code":
+            explanation = metadata.get("explanation", "")
+            description_chars += len(explanation)
+            code_chars += len(source)
+        if outputs:
+            output_chars += len(json.dumps(outputs, default=str))
+        variables = metadata.get("variables")
+        if variables:
+            variable_chars += len(json.dumps(variables, default=str))
+    return {
+        "description": description_chars,
+        "code": code_chars,
+        "outputs": output_chars,
+        "variables": variable_chars,
+    }
+
+
+def log_ai_request_size(label, system_instructions, prompt, *,
+                         preceding=None, instructions=None, previous=None,
+                         file_context=None, error_context=None,
+                         variable_context=None, validation_context=None):
     """Log the size of an AI request when debug mode is on."""
     sys_len = len(system_instructions)
     prompt_len = len(prompt)
     total = sys_len + prompt_len
     print(f"[AI {label}] system={sys_len} prompt={prompt_len} total={total} chars (~{total // CHARS_PER_TOKEN} tokens)")
+    # Breakdown of preceding notebook context.
+    breakdown = _breakdown_preceding(preceding)
+    if breakdown:
+        parts = [f"{k}={_chars_and_tokens(v)}" for k, v in breakdown.items() if v]
+        print(f"  Preceding context: {', '.join(parts)}")
+    # Breakdown of other fields.
+    fields = [
+        ("instructions", instructions),
+        ("previous_code", previous),
+        ("file_context", file_context),
+        ("error_context", error_context),
+        ("variable_context", variable_context),
+        ("validation_context", validation_context),
+    ]
+    parts = [f"{name}={_chars_and_tokens(len(val))}" for name, val in fields if val]
+    if parts:
+        print(f"  Other fields: {', '.join(parts)}")
 
 
 def dump_ai_request(label, system_instructions, prompt):
