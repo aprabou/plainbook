@@ -51,8 +51,7 @@ export default {
     template: /* html */ `
         <div style="display: flex; flex-direction: column; height: 400px; background: white; padding: 1rem;">
             <div style="margin-bottom: 0.5rem;">
-                <strong>AI Instructions</strong>
-                <p style="font-size: 0.85rem; color: #666; margin-top: 0.25rem;">
+                <p style="font-size: 0.85rem; color: #666; margin-top: 0rem;">
                     These instructions are included in every AI prompt for this notebook (code generation, test generation, and validation).
                 </p>
             </div>

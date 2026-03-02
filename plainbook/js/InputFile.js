@@ -133,6 +133,7 @@ export default {
     template: /* html */ `
             <div style="display: flex; height: 400px; background: white;">
                 <div style="flex: 1; border-right: 1px solid #dbdbdb; display: flex; flex-direction: column;">
+                    <div style="padding: 0.4rem 0.5rem; background: #eee; font-size: 0.85rem; color: #666;">Select files for notebook access, so AI knows where to find them.</div>
                     <div style="padding: 8px; background: #eee; display: flex; gap: 8px;">
                         <input type="text" v-model="filterQuery" placeholder="Filter files..." 
                             style="flex: 1; padding: 4px; border: 1px solid #ccc;">
