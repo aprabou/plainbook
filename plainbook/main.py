@@ -358,7 +358,8 @@ def get_notebook_state():
 def execute_cell():
     data = request.json
     cell_index = data.get('cell_index')
-    print(f"Executing cell {cell_index}")
+    if args.debug:
+        print(f"Executing cell {cell_index}")
     try:
         outputs, details = notebook.execute_cell(cell_index)
         return dict(status="ok", details=details, outputs=outputs)

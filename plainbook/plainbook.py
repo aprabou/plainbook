@@ -112,7 +112,7 @@ class Plainbook:
     """Plainbook implementation backed by the snapshot kernel."""
 
     def __init__(self, notebook_path, debug=False, dump_ai_requests=False):
-        print(f"Initializing Plainbook for {notebook_path}...")
+        print(f"Starting Plainbook for {notebook_path}...")
         self.path = notebook_path
         self.debug = debug
         self.dump_ai_requests = dump_ai_requests
@@ -361,7 +361,8 @@ class Plainbook:
 
     def _shutdown(self):
         """Terminate the snapshot kernel subprocess."""
-        print(f"Shutting down snapshot kernel for {self.name}...")
+        if self.debug:
+            print(f"Shutting down snapshot kernel for {self.name}...")
         if hasattr(self, '_sk_process') and self._sk_process:
             try:
                 self._sk_process.terminate()
@@ -474,9 +475,11 @@ class Plainbook:
 
     def reset_kernel(self):
         """Resets the kernel."""
-        print("Request to reset kernel received...")
+        if self.debug:
+            print("Request to reset kernel received...")
         with self._lock:
-            print("Resetting kernel...")
+            if self.debug:
+                print("Resetting kernel...")
             self._reset_kernel()
 
     # Cell insertion, deletion, and movement methods

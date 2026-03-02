@@ -617,6 +617,24 @@ createApp({
             }
         };
 
+        const restarting = ref(false);
+
+        const ui_restart = async () => {
+            restarting.value = true;
+            try {
+                await ui_resetKernel();
+                if (notebook.value) {
+                    for (const cell of notebook.value.cells) {
+                        if (cell.cell_type === 'code' || cell.cell_type === 'test') {
+                            cell.outputs = [];
+                        }
+                    }
+                }
+            } finally {
+                restarting.value = false;
+            }
+        };
+
 
         // Test cell functions
 
@@ -838,6 +856,7 @@ createApp({
             genError, uiError, closeUiError, debug, sendDebugRequest,
             explanationEditKey, deleteCell, moveCell, geminiApiKey, claudeApiKey,
             clearOutputs, activeAiProvider, availableAiProviders, setActiveAiProvider,
+            restarting, ui_restart,
             ui_runTestCell, ui_runAllTests, ui_saveExplanationAndRunTest, ui_forceRegenerateTestCode };
     },
 

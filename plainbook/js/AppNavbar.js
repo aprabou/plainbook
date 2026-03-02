@@ -1,9 +1,9 @@
 export default {
-    props: ['isLocked', 'running', 'runningActivity', 'hasNotebook', 'upToDate', 'cellCount', 'hasApiKey', 'debug',
+    props: ['isLocked', 'running', 'restarting', 'runningActivity', 'hasNotebook', 'upToDate', 'cellCount', 'hasApiKey', 'debug',
             'activeAiProvider', 'availableAiProviders', 'shareOutputWithAi'],
     emits: [
         'lock', 'refresh', 'interrupt', 'regenerate-all',
-        'reset-run-all', 'run-all', 'run-all-tests', 'clear-outputs', 'open-info', 'open-settings', 'debug-request',
+        'restart', 'reset-run-all', 'run-all', 'run-all-tests', 'clear-outputs', 'open-info', 'open-settings', 'debug-request',
         'set-ai-provider', 'toggle-share-output'
         ],
     data() {
@@ -107,20 +107,15 @@ export default {
                             <span v-else>Running...</span>
                         </button>
 
-                        <!-- <button v-if="!running && upToDate"
-                                class="button is-light" title="All cells have been run">
-                            <span class="icon"><i class="bx bx-check-circle"></i></span>
-                            <span>Up to Date</span>
-                        </button> -->
-
-                        <!-- <button v-if="!running && hasNotebook"
-                            :disabled="cellCount === 0 || isLocked"
-                            @click="$emit('regenerate-all')"
-                            title="Regenerate all code from descriptions"
-                            class="button is-success">
-                            <span class="icon"><i class="bx bx-repeat"></i></span>
-                            <span>Regenerate All</span>
-                        </button> -->
+                        <button v-if="!running && hasNotebook"
+                            :disabled="cellCount === 0 || restarting"
+                            :class="['button', 'is-primary']"
+                            @mousedown.prevent
+                            @click="$emit('restart')"
+                            title="Restart (clears execution state)">
+                            <span class="icon"><i class="bx bx-rewind"></i></span>
+                            <span>Restart</span>
+                        </button>
 
                         <button v-if="!running && hasNotebook"
                             :disabled="cellCount === 0"
