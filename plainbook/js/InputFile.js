@@ -144,23 +144,26 @@ export default {
                     <div style="overflow-y: auto; flex: 1;">
                         <div v-if="isLoading" style="padding: 1rem; color: #888;">Loading...</div>
                         <ul v-else style="list-style: none; margin: 0; padding: 0;">
-                            <li v-for="item in filteredFiles" :key="item.path" 
-                                style="padding: 0.4rem 0.75rem; border-bottom: 1px solid #fafafa; display: flex; align-items: center; gap: 8px;">
-                                
-                                <input type="checkbox" 
-                                       v-if="item.type === 'file'"
-                                       :checked="selectedFiles.has(item.path)"
-                                       @change="toggleSelection(item)">
-                                
-                                <span v-if="item.type === 'directory'" style="color: #f39c12;">📁</span>
-                                <span v-else style="color: #656565ff;">📄</span>
+                            <li v-for="item in filteredFiles" :key="item.path"
+                                style="padding: 0.1rem 0.5rem; border-bottom: 1px solid #fafafa; display: flex; align-items: center; gap: 4px;">
 
-                                <span v-if="item.type === 'directory'" 
+                                <span style="width: 0.9rem; display: flex; justify-content: center; flex-shrink: 0;">
+                                    <input type="checkbox" v-if="item.type === 'file'"
+                                           :checked="selectedFiles.has(item.path)"
+                                           @change="toggleSelection(item)"
+                                           style="width: 0.7rem; height: 0.7rem;">
+                                </span>
+
+                                <span class="icon is-small" :style="item.type === 'directory' ? 'color: #3273dc;' : ''">
+                                    <i :class="item.type === 'directory' ? 'bx bx-folder' : 'bx bx-file'"></i>
+                                </span>
+
+                                <span v-if="item.type === 'directory'"
                                       @click="openFolder(item)"
-                                      style="cursor: pointer; color: #3273dc; font-weight: 500;">
+                                      style="cursor: pointer; color: #3273dc; font-weight: 500;" class="is-size-7">
                                     {{ item.name }}/
                                 </span>
-                                <span v-else>{{ item.name }}</span>
+                                <span v-else class="is-size-7">{{ item.name }}</span>
                             </li>
                         </ul>
                     </div>
