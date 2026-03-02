@@ -8,11 +8,11 @@ import SettingsModal from './SettingsModal.js';
 import InfoModal from './InfoModal.js';
 import TestHelpModal from './TestHelpModal.js';
 import UiError from './UiError.js';
-import InputFile from './InputFile.js';
+import PanelBar from './PanelBar.js';
 import NotebookHelp from './NotebookHelp.js';
 
 createApp({
-    components: { AppNavbar, NotebookCell, CellInsertionZone, CellLabel, SettingsModal, InfoModal, TestHelpModal, UiError, InputFile, NotebookHelp },
+    components: { AppNavbar, NotebookCell, CellInsertionZone, CellLabel, SettingsModal, InfoModal, TestHelpModal, UiError, PanelBar, NotebookHelp },
     setup() {
         // Extract token from URL
         const urlParams = new URLSearchParams(window.location.search);

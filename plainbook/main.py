@@ -599,6 +599,21 @@ def get_files():
     return dict(files=d['input_files'], missing_files=d['missing_input_files'])
 
 
+@post('/set_ai_instructions')
+@require_token
+def set_ai_instructions():
+    data = request.json
+    instructions = data.get('ai_instructions', '')
+    notebook.set_ai_instructions(instructions)
+    return dict(status='success')
+
+
+@get('/get_ai_instructions')
+@require_token
+def get_ai_instructions():
+    return dict(ai_instructions=notebook.get_ai_instructions())
+
+
 @post('/debug_request')
 @require_token
 @stateful

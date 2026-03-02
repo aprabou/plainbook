@@ -2,8 +2,8 @@ import { ref, reactive, onMounted, computed, watch } from './vue.esm-browser.js'
 
 export default {
     props: ['authToken'],
-    setup(props) {
-        const isCollapsed = ref(true);
+    emits: ['file-counts'],
+    setup(props, { emit }) {
         const currentPath = ref('/'); // Root path
         const fileList = ref([]);     // Files in the current directory
         const selectedFiles = reactive(new Map()); // Path -> File object mapping
@@ -80,10 +80,12 @@ export default {
             }
         };
 
-        watch(selectedFiles, syncSelectedFiles, { deep: true });
-        watch(missingFiles,  syncSelectedFiles, { deep: true });
+        const emitCounts = () => {
+            emit('file-counts', { selected: selectedFiles.size, missing: missingFiles.size });
+        };
 
-        const toggleCollapse = () => isCollapsed.value = !isCollapsed.value;
+        watch(selectedFiles, () => { syncSelectedFiles(); emitCounts(); }, { deep: true });
+        watch(missingFiles,  () => { syncSelectedFiles(); emitCounts(); }, { deep: true });
 
         // Load selected files mapping from server and populate `selectedFiles`
         const loadSelectedFiles = async () => {
@@ -100,6 +102,7 @@ export default {
                 data.missing_files.forEach(f => {
                     missingFiles.set(f.path, f);
                 });
+                emitCounts();
             } catch (err) {
                 console.warn('Failed to load selected input files:', err);
             }
@@ -122,30 +125,13 @@ export default {
         onMounted(initialize);
 
         return {
-            isCollapsed, toggleCollapse, currentPath, 
             currentPath, fileList, isLoading,
             selectedFiles, missingFiles, filterQuery, filteredFiles,
             openFolder, goUp, toggleSelection, removeSelected, removeMissing
         };
     },
     template: /* html */ `
-        <div class="input-file-wrapper" style="background-color: #f5f5f5; border: 1px solid #dbdbdb; border-radius: 4px;">
-            <button style="width: 100%; text-align: left; background: transparent; border: none; padding: 0.75rem; cursor: pointer;"
-                    @click="toggleCollapse">
-                <span v-if="isCollapsed">
-                    ▶ 
-                    <span style="display: inline-block; background: gray; color: white; border-radius: 999px; padding: 0.12rem 0.45rem; margin-left: 0.5rem; font-size: 0.8rem; font-weight: 600;">
-                        {{ selectedFiles.size }}
-                    </span>
-                    <span v-if="missingFiles.size > 0" class="has-background-danger" style="display: inline-block; color: white; border-radius: 999px; padding: 0.12rem 0.45rem; margin-left: 0.5rem; font-size: 0.8rem; font-weight: 600;">
-                        {{ missingFiles.size }}
-                    </span>
-                    <span class="ml-2">Select Input Files</span>
-                </span>
-                <span v-else>▼ &nbsp;You can mention selected files by name in the plainbook, the code generator will know where to find them.</span>
-            </button>
-
-            <div v-if="!isCollapsed" style="display: flex; border-top: 1px solid #dbdbdb; height: 400px; background: white;">
+            <div style="display: flex; height: 400px; background: white;">
                 <div style="flex: 1; border-right: 1px solid #dbdbdb; display: flex; flex-direction: column;">
                     <div style="padding: 8px; background: #eee; display: flex; gap: 8px;">
                         <input type="text" v-model="filterQuery" placeholder="Filter files..." 
@@ -217,6 +203,5 @@ export default {
                 </div>
 
             </div>
-        </div>
     `
 };

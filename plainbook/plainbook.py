@@ -402,6 +402,7 @@ class Plainbook:
             self.nb.metadata['input_files'] = []
             self.nb.metadata['is_locked'] = False
             self.nb.metadata['share_output_with_ai'] = True
+            self.nb.metadata['ai_instructions'] = ''
             with open(self.path, "w") as f:
                 nbformat.write(self.nb, f)
         self.last_executed_cell = -1 # When we load, we need to re-execute from the start.
@@ -833,6 +834,9 @@ class Plainbook:
                 raise RuntimeError("Cannot generate code: previous output must be valid.")
             # Gets code context.
             instructions = cell.metadata.get('explanation')
+            ai_instructions = self.nb.metadata.get('ai_instructions', '')
+            if ai_instructions:
+                instructions = instructions + "\n\nADDITIONAL INSTRUCTIONS:\n" + ai_instructions
             files_context = self._get_files_context()
             error_context = self._get_error_context(index)
             variable_context = self._get_variables_for_ai(index)
@@ -893,6 +897,9 @@ class Plainbook:
                 raise RuntimeError("Cannot generate test code: previous output must be valid.")
             # Build context for the AI.
             instructions = cell.metadata.get('explanation')
+            ai_instructions = self.nb.metadata.get('ai_instructions', '')
+            if ai_instructions:
+                instructions = instructions + "\n\nADDITIONAL INSTRUCTIONS:\n" + ai_instructions
             files_context = self._get_files_context()
             error_context = self._get_error_context(index)
             variable_context = self._get_variables_for_ai(index)
@@ -999,6 +1006,9 @@ class Plainbook:
             assert cell.cell_type in ('code', 'test')
             code_to_validate = cell.source
             instructions = cell.metadata.get('explanation')
+            ai_instructions = self.nb.metadata.get('ai_instructions', '')
+            if ai_instructions:
+                instructions = instructions + "\n\nADDITIONAL INSTRUCTIONS:\n" + ai_instructions
             previous_code = self._get_preceding_code_json_for_ai(index, include_all_variables=(cell.cell_type == 'test'))
             variable_context = self._get_variables_for_ai(index)
             try:
@@ -1055,6 +1065,17 @@ class Plainbook:
                 missing_input_files=self.nb.metadata.get('missing_input_files', [])
             )
 
+
+    def set_ai_instructions(self, instructions):
+        """Sets the notebook-wide AI instructions."""
+        with self._lock:
+            self.nb.metadata['ai_instructions'] = instructions
+            self._write()
+
+    def get_ai_instructions(self):
+        """Returns the notebook-wide AI instructions."""
+        with self._lock:
+            return self.nb.metadata.get('ai_instructions', '')
 
     def _get_files_context(self):
         """Builds the AI context including input files."""
