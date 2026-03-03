@@ -1,8 +1,5 @@
 # <img src="https://github.com/lucadealfaro/plainbook/raw/main/plainbook/images/Plainbook_logo.png" height="30"> Plainbook: Natural Language Notebooks.
 
-Authors: 
-
-Luca de Alfaro, dealfaro@acm.org
 
 ## Installation and use
 
@@ -63,6 +60,6 @@ Currently, Plainbook supports Gemini and Claude models.  You will need an API ke
 
 ## Contributors
 
-* Luca de Alfaro, main developer, UC Santa Cruz. 
+* [Luca de Alfaro](https://luca.dealfaro.com), lead developer, UC Santa Cruz. 
 * Mathis Aubert, UC Santa Cruz. 
 * Ranjit Jhala, UC San Diego.
