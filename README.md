@@ -56,3 +56,8 @@ Differently from other notebook systems, Plainbooks are executed from start to e
 Plainbook is designed to work with multiple AI providers, and users can choose which provider to use for code generation and checking.  The system is designed to allow users to easily switch between providers, so that users can cross-check that the implementation obtained from one provider is considered valid by another provider.  This avoids over-reliance on a single class of AI models. 
 Currently, Plainbook supports Gemini and Claude models.  You will need an API key for at least one such provider to use Plainbook.
 
+## Contributors
+
+Luca de Alfaro, main developer, UC Santa Cruz. 
+Mathis Aubert, UC Santa Cruz. 
+Ranjit Jhala, UC San Diego.
