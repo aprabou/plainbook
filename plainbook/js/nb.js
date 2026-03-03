@@ -348,6 +348,8 @@ createApp({
         };
 
         const insertCell = async (position, cellType) => {
+            flushActiveEdits();
+            await waitForPendingSaves();
             asRead.value = false;
             try {
                 const r = await apiCall('/insert_cell', 'POST', { 

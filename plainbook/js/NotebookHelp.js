@@ -6,7 +6,7 @@ const NotebookHelp = {
 
                 <p>A Plainbook is a document that contains a series of cells. 
                 The cells describe in plain language what you want to do.  Your instructions are translated into code and executed.
-                <strong>You need at least one AI key to use Plainbook</strong>, which you can set in the settings menu.</p>
+                <strong>You need at least one AI API key to use Plainbook</strong>, which you can set in the settings menu.</p>
                 <p>There are three types of cells:</p>
                 <ul>
                     <li><strong>Comment cells:</strong> Used for comments and explanations; you can use markdown notation.</li>
@@ -39,17 +39,25 @@ const NotebookHelp = {
                 Then, you can refer to the file in your instructions using its name.
                 This is done because if you simply cited a file name, AI would not be able to locate it 
                 in your file system!</p>
+                <p>The tab contains an indication of how many files you have selected. 
+                In red are indicated files that cannot be found in the file system; pleaes re-select them. </p>
+
+                <h2 class="title is-4">Instructions</h2>
+                <p>In the instructions tab, you can write global instructions to be used in generating code. 
+                You can include here information on APIs to use, and so on. </p>
 
                 <h2 class="title is-4">Buttons and Settings</h2>
                 <ul style="list-style: none; padding-left: 0;">
                     <li class="mb-2"><button class="button is-small is-light"><i class="bx bx-lock-open"></i></button> 
                     You can use this button to toggle the read-only state of the notebook.  A read-only notebook can be run, but cannot be accidentally modified.</li>
                     <li class="mb-2"><button class="button is-small is-light"><i class="bx bx-broom"></i></button> 
-                    This button clears all outputs.</li>
-                    <li class="mb-2"><button class="button is-small is-primary"><i class="bx bx-keyframe-ease-in"></i></button> 
-                    Run the notebook from the beginning to the end.</li>
+                    Clear all outputs.</li>
+                    <li class="mb-2"><button class="button is-small is-primary"><i class="bx bx-rewind"></i></button> 
+                    Reset the execution state, so that you can rerun the notebook from the start.</li>
+                    <!-- <li class="mb-2"><button class="button is-small is-primary"><i class="bx bx-keyframe-ease-in"></i></button> 
+                    Run the notebook from the beginning to the end.</li> -->
                     <li class="mb-2"><button class="button is-small is-primary"><i class="bx bx-play"></i></button> 
-                    Ensure that all cells have been run, running them as needed.</li>
+                    Run all cells (except tests).</li>
                     <li class="mb-2"><button class="button is-small is-warning"><i class="bx bx-seal-check"></i></button> 
                     Run all tests.  Tests are not run when you run the notebook.</li>
                     <li class="mb-2"><button class="button is-small is-success"><i class="bx bx-shield"></i></button> 

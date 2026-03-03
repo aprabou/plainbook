@@ -93,7 +93,7 @@ export default {
                                 @click="$emit('interrupt')"
                                 class="button is-danger" title="Interrupt Execution">
                             <span class="icon">
-                                <i :class="bx-stop-circle"></i>
+                                <i class="bx bx-stop-circle"></i>
                             </span>
                             <span v-if="runningActivity && runningActivity.type === 'generating'">
                                 Generating cell {{ runningActivity.cellIndex + 1 }}<template v-if="runningActivity.cellName">: {{ runningActivity.cellName }}</template>
@@ -117,6 +117,7 @@ export default {
                             <span>Restart</span>
                         </button>
 
+                        <!--
                         <button v-if="!running && hasNotebook"
                             :disabled="cellCount === 0"
                             @mousedown.prevent
@@ -128,6 +129,7 @@ export default {
                             </span>
                             <span>Re-run</span>
                         </button>
+                        -->
 
                         <button v-if="!running && hasNotebook"
                             :disabled="cellCount === 0"

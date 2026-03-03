@@ -990,6 +990,11 @@ class Plainbook:
                     evalue=err.get("evalue", ""),
                 )
 
+            cell.outputs.append(nbformat.from_dict({
+                "output_type": "stream",
+                "name": "stdout",
+                "text": "The test passed.\n",
+            }))
             self._write()
             return cell.outputs
 

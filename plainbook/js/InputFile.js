@@ -148,11 +148,11 @@ export default {
                             <li v-for="item in filteredFiles" :key="item.path"
                                 style="padding: 0.1rem 0.5rem; border-bottom: 1px solid #fafafa; display: flex; align-items: center; gap: 4px;">
 
-                                <span style="width: 0.9rem; display: flex; justify-content: center; flex-shrink: 0;">
+                                <span style="width: 1rem; min-width: 1rem; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                                     <input type="checkbox" v-if="item.type === 'file'"
                                            :checked="selectedFiles.has(item.path)"
                                            @change="toggleSelection(item)"
-                                           style="width: 0.7rem; height: 0.7rem;">
+                                           style="width: 0.8rem; height: 0.8rem; margin: 0; cursor: pointer;">
                                 </span>
 
                                 <span class="icon is-small" :style="item.type === 'directory' ? 'color: #3273dc;' : ''">
