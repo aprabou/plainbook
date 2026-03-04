@@ -52,7 +52,7 @@ Plainbooks consist of three types of cells:
 
 * **Test cells**, where the user can write properties that should hold at certain points of the notebook to check that everything is working as expected.
 
-Differently from other notebook systems, Plainbooks are executed from start to end: random cell execution order, as in Jupyter notebooks, is not allowed.  This ensures that the results are obtained in the same order in which a human reader would read the notebook.
+Differently from other notebook systems, Plainbooks are executed from start to end,  so that the results follow the same order in which we humans read the cells. Plainbooks relies on a [checkpointing kernel](https://github.com/lucadealfaro/snapshot-kernel) to remember the execution state after each cell, so that it can re-run a cell without having to start from the beginning.
 
 **AI Providers**
 Plainbook is designed to work with multiple AI providers, and users can choose which provider to use for code generation and checking.  The system is designed to allow users to easily switch between providers, so that users can cross-check that the implementation obtained from one provider is considered valid by another provider.  This avoids over-reliance on a single class of AI models. 
