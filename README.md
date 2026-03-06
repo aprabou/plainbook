@@ -1,15 +1,16 @@
 # <img src="https://github.com/lucadealfaro/plainbook/raw/main/plainbook/images/Plainbook_logo.png" height="30"> Plainbook: Natural Language Notebooks.
 
 Plainbooks allow users to create and communicate data analysis and science using natural language. 
-Plainbooks are notebooks that combine instructions, with results, similarly to Jupyter notebooks. 
-The difference is that in Plainbook, users view natural language, rather than code. 
-The code is obtained "under the hood" from the natural language via AI; AI can also be used to test and verify the resulting code. 
 
-This allows you to share your data analysis and science with a much wider audience, including people who do not know how to code, and to make it easier for everyone to understand what you are doing.
-Recipients can use AI to check that the "notebook does not lie", that is, that the code implementation is faithful to the natural language description, and they can also run the tests, as a further check. 
+Plainbooks are notebooks that combine instructions and results, similarly to Jupyter notebooks. 
+The difference is that in Plainbook, users view natural language, rather than code. 
+The code is generated "under the hood" using AI. 
+This allows you to share your data analysis and science with a much wider audience, including people who do not know how to code, and to make it easier for everyone to understand what you are doing. 
+
+When you share a plainbook, recipients can use AI to check that the "notebook does not lie", that is, that the code implementation is faithful to the natural language description, and they can also run tests, as a further check. 
 Recipients can also edit the natural language description, and regenerate the code, to adapt the notebook to their needs.
 
-In other words, the goal of Plainbooks is to replicate in natural language what made Juptyter notebooks so successful: the ability to share together code and results, the ability to inspect how the results are obtained, and the ability to modify the notebook.  The difference is that in Plainbook, these activities are done via natural language and AI, rather than via code, and are thus accessible to a much wider audience.
+In other words, the goal of Plainbooks is to replicate in natural language what made Juptyter notebooks so successful: the ability to share together code and results, the ability to inspect how the results are obtained, and the ability to modify the notebook. 
 
 ## Installation and use
 
