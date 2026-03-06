@@ -1,5 +1,15 @@
 # <img src="https://github.com/lucadealfaro/plainbook/raw/main/plainbook/images/Plainbook_logo.png" height="30"> Plainbook: Natural Language Notebooks.
 
+Plainbooks allow users to create and communicate data analysis and science using natural language. 
+Plainbooks are notebooks that combine instructions, with results, similarly to Jupyter notebooks. 
+The difference is that in Plainbook, users view natural language, rather than code. 
+The code is obtained "under the hood" from the natural language via AI; AI can also be used to test and verify the resulting code. 
+
+This allows you to share your data analysis and science with a much wider audience, including people who do not know how to code, and to make it easier for everyone to understand what you are doing.
+Recipients can use AI to check that the "notebook does not lie", that is, that the code implementation is faithful to the natural language description, and they can also run the tests, as a further check. 
+Recipients can also edit the natural language description, and regenerate the code, to adapt the notebook to their needs.
+
+In other words, the goal of Plainbooks is to replicate in natural language what made Juptyter notebooks so successful: the ability to share together code and results, the ability to inspect how the results are obtained, and the ability to modify the notebook.  The difference is that in Plainbook, these activities are done via natural language and AI, rather than via code, and are thus accessible to a much wider audience.
 
 ## Installation and use
 
@@ -13,8 +23,8 @@ To run Plainbook, you might first want to create a Python environment, in case y
 
 ```bash
 
-python -m venv plainbook-env
-source plainbook-env/bin/activate  # On Windows, use `plainbook-env\Scripts\activate`
+python -m venv .venv
+source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
 ```
 Then, you can run Plainbook on a notebook file (which will be created if it does not exist):
 
@@ -24,26 +34,21 @@ plainbook notebook.nlb
 
 You can use any file name you like, with any extension you like. 
 
+**AI API Keys.** You need a Gemini or Claude API key to use Plainbook.  Click on the Settings button (the gear on the top right) and it will contain links where to get such keys.  The lead developer is spending only about $2/month on Gemini and Claude together, so the cost should be very low.
+
+### Examples 
+
 * [Introductory video](https://youtu.be/Mkv5cl5rA7s). 
 * Plainbook on football matches: [Download football.plb](https://github.com/lucadealfaro/plainbook/raw/main/examples/football.plb).  
 
-You need a Gemini or Claude API key to use Plainbook.  Click on the Settings button (the gear on the top right) and it will contain links where to get such keys.  The lead developer is spending only about $2/month on Gemini and Claude together, so the cost should be very low.
+### Resources
 
-## Overview
+* [GitHub Repository](https://github.com/lucadealfaro/plainbook).
+* [Pypi package](https://pypi.org/project/plainbook/).
 
-The gloal of Plainbook is to allow users to create and communicate data analysis and science using natural language. 
-Plainbooks are notebooks that combine instructions, with results, similarly to Jupyter notebooks. 
-The difference is that in Plainbook, instructions are given in natural language, which is preserved in the notebook along with the results. 
 
-Users can create the notebooks using entirely natural language, which is translated into code by AI. 
-Users can also include in the plainbooks tests, also written in natural language, that help check that the notebook is working as expected. 
+## Plainbook Structure ##
 
-When sharing a plainbook, recipients can use AI, and in fact multiple AI providers if they so wish, to check that the "notebook does not lie", that is, that the code implementation is faithful to the natural language description, and they can also run the tests, as a further check. 
-Recipients can also edit the natural language description, and regenerate the code, to adapt the notebook to their needs.
-
-In other words, the goal of Plainbooks is to replicate in natural language what made Juptyter notebooks so successful: the ability to share together code and results, the ability to inspect how the results are obtained, and the ability to modify the notebook.  The difference is that in Plainbook, these activities are done via natural language and AI, rather than via code, and are thus accessible to a much wider audience.
-
-**Plainbook Structure**
 Plainbooks consist of three types of cells: 
 
 * **Action cells**, where the user describes in natural language the action to be performed (e.g., "Load the dataset from file data.csv and display the first 10 rows").  The system converts the description to code, executes it, and displays the results below the cell.
