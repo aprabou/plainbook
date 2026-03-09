@@ -4,6 +4,8 @@ import string
 
 SPACES_AND_PUNCTUATION_PATTERN = f"^[{re.escape(string.punctuation + string.whitespace)}]+"
 
+SEPARATOR = '\n    '
+
 CHARS_PER_TOKEN = 4
 MAX_TOKENS_PER_ARGUMENT = 10_000
 _MAX_CHARS_PER_ARGUMENT = MAX_TOKENS_PER_ARGUMENT * CHARS_PER_TOKEN
@@ -122,7 +124,7 @@ def log_ai_request_size(label, system_instructions, prompt, *,
     breakdown = _breakdown_preceding(preceding)
     if breakdown:
         parts = [f"{k}={_chars_and_tokens(v)}" for k, v in breakdown.items() if v]
-        print(f"  Preceding context:\n    {'\n    '.join(parts)}")
+        print(f"  Preceding context:\n    {SEPARATOR.join(parts)}")
     # Breakdown of other fields.
     fields = [
         ("instructions", instructions),
@@ -134,7 +136,7 @@ def log_ai_request_size(label, system_instructions, prompt, *,
     ]
     parts = [f"{name}={_chars_and_tokens(len(val))}" for name, val in fields if val]
     if parts:
-        print(f"  Cell information:\n    {'\n    '.join(parts)}")
+        print(f"  Cell information:\n    {SEPARATOR.join(parts)}")
 
 
 def dump_ai_request(label, system_instructions, prompt):
