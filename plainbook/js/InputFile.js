@@ -47,6 +47,26 @@ export default {
             fetchFiles(parentPath);
         };
 
+        const goHome = async () => {
+            try {
+                const res = await fetch(`/home_dir?token=${props.authToken}`);
+                const data = await res.json();
+                await fetchFiles(data.path);
+            } catch (err) {
+                console.warn('Failed to navigate to home directory:', err);
+            }
+        };
+
+        const goCurrent = async () => {
+            try {
+                const res = await fetch(`/current_dir?token=${props.authToken}`);
+                const data = await res.json();
+                await fetchFiles(data.path);
+            } catch (err) {
+                console.warn('Failed to navigate to current directory:', err);
+            }
+        };
+
         // Selection actions
         const toggleSelection = (file) => {
             if (selectedFiles.has(file.path)) {
@@ -111,7 +131,7 @@ export default {
         // Get home dir on load
         const initialize = async () => {
             try {
-                const res = await fetch(`/home_dir?token=${props.authToken}`);
+                const res = await fetch(`/current_dir?token=${props.authToken}`);
                 const data = await res.json();
                 await fetchFiles(data.path);
                 await loadSelectedFiles();
@@ -127,7 +147,7 @@ export default {
         return {
             currentPath, fileList, isLoading,
             selectedFiles, missingFiles, filterQuery, filteredFiles,
-            openFolder, goUp, toggleSelection, removeSelected, removeMissing
+            openFolder, goUp, goHome, goCurrent, toggleSelection, removeSelected, removeMissing
         };
     },
     template: /* html */ `
@@ -138,8 +158,19 @@ export default {
                         <input type="text" v-model="filterQuery" placeholder="Filter files..." 
                             style="flex: 1; padding: 4px; border: 1px solid #ccc;">
                     </div>
-                    <div style="padding: 0.25rem; background: #eee; display: flex; gap: 10px; align-items: center;">
-                        <button @click="goUp" :disabled="currentPath === '/'" class="button is-light">Up</button>
+                    <div style="padding: 0.25rem; background: #eee; display: flex; gap: 6px; align-items: center;">
+                        <button @click="goUp" :disabled="currentPath === '/'" class="button is-small is-light" style="border: 1px solid #ccc;">
+                            <span class="icon is-small"><i class="bx bx-arrow-big-up"></i></span>
+                            <span>Up</span>
+                        </button>
+                        <button @click="goHome" class="button is-small is-light" style="border: 1px solid #ccc;">
+                            <span class="icon is-small"><i class="bx bx-home"></i></span>
+                            <span>Home</span>
+                        </button>
+                        <button @click="goCurrent" class="button is-small is-light" style="border: 1px solid #ccc;">
+                            <span class="icon is-small"><i class="bx bx-target"></i></span>
+                            <span>Current</span>
+                        </button>
                         <code style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ currentPath }}</code>
                     </div>                    
                     <div style="overflow-y: auto; flex: 1;">

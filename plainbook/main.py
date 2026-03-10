@@ -548,6 +548,12 @@ def set_share_output():
     return {}
 
 
+@get('/current_dir')
+@require_token
+def get_current_dir():
+    """Returns the absolute path of the working directory where plainbook was launched."""
+    return {"path": str(Path.cwd())}
+
 @get('/home_dir')
 @require_token
 def get_home_dir():
