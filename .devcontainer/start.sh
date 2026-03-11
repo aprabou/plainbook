@@ -3,5 +3,5 @@
 export CLAUDE_API_KEY=$(curl -s https://storage.googleapis.com/research-share/claude_public_key.txt)
 cp examples/Soccer.plnb /tmp/Soccer.plnb
 nohup plainbook /tmp/Soccer.plnb > /tmp/plainbook.log 2>&1 &
-sleep 5
+sleep 10
 grep 'Authentication token' /tmp/plainbook.log
