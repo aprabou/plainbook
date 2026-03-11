@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plainbook - Login</title>
+<link rel="stylesheet" href="/css/main.css">
+<style>
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+.login-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+}
+</style>
+</head>
+<body>
+<div class="login-container">
+<div class="login-box">
+    <h1 class="title has-text-centered">Plainbook</h1>
+    <p class="subtitle has-text-centered">Enter your authentication token</p>
+    {{!error_message}}
+    <form method="POST" action="/login">
+        <div class="field">
+            <div class="control">
+                <input class="input" type="password" name="token"
+                       placeholder="Paste token here" autofocus>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary is-fullwidth" type="submit">
+                    Log in
+                </button>
+            </div>
+        </div>
+    </form>
+    <p class="has-text-grey is-size-7 has-text-centered mt-4">
+        The token is printed in the server console at startup.
+    </p>
+</div>
+</div>
+</body>
+</html>

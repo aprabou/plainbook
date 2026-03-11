@@ -14,7 +14,7 @@ import sys
 import webbrowser
 # Bottle imports
 from bottle import route, template, get, post, static_file, view, HTTPError
-from bottle import run, default_app, request, TEMPLATE_PATH
+from bottle import run, default_app, request, response, redirect, TEMPLATE_PATH
 
 # print(f"DEBUGGER PYTHON: {sys.executable}")
 
@@ -25,6 +25,7 @@ from .gemini import get_gemini_models
 
 APP_FOLDER = os.path.dirname(__file__)
 TEMPLATE_PATH.insert(0, os.path.join(APP_FOLDER, 'views'))
+
 app_path = Path(APP_FOLDER)
 PARENT_FOLDER = app_path.parent
 TEST_INPUTS = os.path.join(PARENT_FOLDER, "tests/files")
@@ -46,6 +47,9 @@ parser.add_argument('--dump-ai-requests', action='store_true', default=False,
                     help='Dump the full text of AI requests to stdout')
 parser.add_argument('--port', type=int, default=8080,
                     help='Port to run the server on')
+parser.add_argument('--host', type=str,
+                    default='0.0.0.0' if os.environ.get('CODESPACES') else '127.0.0.1',
+                    help='Host to bind the server to (default: 0.0.0.0 in Codespaces, 127.0.0.1 otherwise)')
 args = parser.parse_args()
 
 try:
@@ -214,9 +218,18 @@ def stateful(func):
 
 # Main routes
 @get('/')
-@require_token
 def index():
-    return static_file('index.html', root=os.path.join(APP_FOLDER, 'views'))
+    token = request.query.get('token')
+    if token == AUTH_TOKEN:
+        return static_file('index.html', root=os.path.join(APP_FOLDER, 'views'))
+    return template('login', error_message='')
+
+@post('/login')
+def login():
+    token = request.forms.get('token', '').strip()
+    if token == AUTH_TOKEN:
+        redirect('/?token=' + AUTH_TOKEN)
+    return template('login', error_message='<p class="has-text-danger has-text-centered mb-4">Invalid token. Please try again.</p>')
 
 @get('/get_notebook')
 @stateful
@@ -643,7 +656,7 @@ def find_free_port():
     while True:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
-                s.bind(('127.0.0.1', port))
+                s.bind((args.host, port))
                 return port
             except OSError:
                 port += 2
@@ -664,7 +677,8 @@ def main():
     print(f"Plainbook {__version__}")
     port = find_free_port()
     url = f"http://127.0.0.1:{port}/?token={AUTH_TOKEN}"
-    if args.debug:  
+    print(f"Authentication token: {AUTH_TOKEN}")
+    if args.debug:
         print(f"Please load this URL: {url}")
     else:
         try:
@@ -672,9 +686,9 @@ def main():
         except Exception:
             print(f"If the browser does not open, please load this URL: {url}")
     app_with_logging = logger_middleware(default_app()) if args.debug else default_app()
-    # Do not use reloader=True. 
+    # Do not use reloader=True.
     try:
-        run(app=app_with_logging, host='127.0.0.1', port=port, 
+        run(app=app_with_logging, host=args.host, port=port,
             server='cheroot', numthreads=10, 
             debug=args.debug)
     except KeyboardInterrupt:
