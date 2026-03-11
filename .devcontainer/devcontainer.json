@@ -1,12 +1,12 @@
 {
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "postCreateCommand": "pip install . && pip install pandas matplotlib && export API_KEY=$(curl -s https://storage.googleapis.com/research-share/claude_public_key.txt)",
-  "postStartCommand": "cp examples/Soccer.plnb /tmp/Soccer.plnb && nohup plainbook /tmp/Soccer.plnb > /tmp/plainbook.log 2>&1 & sleep 10 && grep 'Authentication token' /tmp/plainbook.log",
+  "postCreateCommand": "pip install . && pip install pandas matplotlib",
+  "postStartCommand": "bash .devcontainer/start.sh",
   "forwardPorts": [8080],
   "portsAttributes": {
     "8080": {
       "label": "Plainbook",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "notify"
     }
   }
 }
