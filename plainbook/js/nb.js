@@ -69,11 +69,13 @@ createApp({
         const activeAiProvider = ref(null);
         const aiProviderRegistry = ref([]);
         const isCodespace = ref(false);
+        const hasGeminiKey = ref(false);
+        const hasClaudeKey = ref(false);
 
         const availableAiProviders = computed(() => {
             const apiKeys = {
-                'gemini_api_key': geminiApiKey.value,
-                'claude_api_key': claudeApiKey.value,
+                'gemini_api_key': geminiApiKey.value || hasGeminiKey.value,
+                'claude_api_key': claudeApiKey.value || hasClaudeKey.value,
             };
             return aiProviderRegistry.value.filter(p => !!apiKeys[p.key_setting]);
         });
@@ -162,6 +164,8 @@ createApp({
                 aiProviderRegistry.value = r.ai_providers || [];
                 debug.value = r.debug || false;
                 isCodespace.value = r.is_codespace || false;
+                hasGeminiKey.value = r.has_gemini_key || false;
+                hasClaudeKey.value = r.has_claude_key || false;
             } catch (err) {
                 error.value = err.message;
                 throw new Error("Error in loading notebook", { cause: err });
@@ -859,7 +863,7 @@ createApp({
             saveSettings, showSettings, showInfo, showTestHelp,
             genError, uiError, closeUiError, debug, sendDebugRequest,
             explanationEditKey, deleteCell, moveCell, geminiApiKey, claudeApiKey,
-            clearOutputs, activeAiProvider, availableAiProviders, setActiveAiProvider, isCodespace,
+            clearOutputs, activeAiProvider, availableAiProviders, setActiveAiProvider, isCodespace, hasGeminiKey, hasClaudeKey,
             restarting, ui_restart,
             ui_runTestCell, ui_runAllTests, ui_saveExplanationAndRunTest, ui_forceRegenerateTestCode };
     },

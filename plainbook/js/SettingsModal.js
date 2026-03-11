@@ -1,7 +1,7 @@
 import { ref, watch } from './vue.esm-browser.js';
 
 export default {
-    props: ['isActive', 'geminiApiKey', 'claudeApiKey', 'isCodespace'],
+    props: ['isActive', 'geminiApiKey', 'claudeApiKey', 'isCodespace', 'hasGeminiKey', 'hasClaudeKey'],
     emits: ['close', 'save'],
     setup(props, { emit }) {
         const localGeminiKey = ref(props.geminiApiKey);
@@ -10,8 +10,14 @@ export default {
         // Sync local drafts whenever the modal is opened
         watch(() => props.isActive, (active) => {
             if (active) {
-                localGeminiKey.value = props.geminiApiKey;
-                localClaudeKey.value = props.claudeApiKey;
+                if (props.isCodespace) {
+                    // In Codespaces, always show empty inputs (never reveal existing keys)
+                    localGeminiKey.value = '';
+                    localClaudeKey.value = '';
+                } else {
+                    localGeminiKey.value = props.geminiApiKey;
+                    localClaudeKey.value = props.claudeApiKey;
+                }
             }
         });
 
@@ -33,18 +39,17 @@ export default {
                 <button class="delete" aria-label="close" @click="$emit('close')"></button>
             </header>
             <section class="modal-card-body">
-                <div v-if="isCodespace" class="notification is-info is-light mb-4">
-                    API keys are pre-configured in this GitHub Codespace.
+                <div v-if="isCodespace && (hasGeminiKey || hasClaudeKey)" class="notification is-info is-light mb-4">
+                    Default API keys are pre-configured. You can enter your own keys below to override them.
                 </div>
                 <div class="field">
                     <label class="label">Gemini API Key</label>
                     <div class="control">
                         <input class="input" type="text"
                                v-model="localGeminiKey"
-                               :disabled="isCodespace"
-                               placeholder="Enter your Gemini API key (optional)">
+                               :placeholder="isCodespace && hasGeminiKey ? 'Pre-configured key in use' : 'Enter your Gemini API key (optional)'">
                     </div>
-                    <p class="help" v-if="!isCodespace">
+                    <p class="help">
                         <a href="https://aistudio.google.com/app/apikey" target="_blank" class="button is-small is-link is-light" style="margin-top: 0.5rem;">
                             {{ localGeminiKey ? 'Manage Gemini API Key' : 'Get Gemini API Key' }}
                         </a>
@@ -55,10 +60,9 @@ export default {
                     <div class="control">
                         <input class="input" type="text"
                                v-model="localClaudeKey"
-                               :disabled="isCodespace"
-                               placeholder="Enter your Claude API key (optional)">
+                               :placeholder="isCodespace && hasClaudeKey ? 'Pre-configured key in use' : 'Enter your Claude API key (optional)'">
                     </div>
-                    <p class="help" v-if="!isCodespace">
+                    <p class="help">
                         <a href="https://console.anthropic.com/settings/keys" target="_blank" class="button is-small is-link is-light" style="margin-top: 0.5rem;">
                             {{ localClaudeKey ? 'Manage Claude API Key' : 'Get Claude API Key' }}
                         </a>
@@ -66,8 +70,7 @@ export default {
                 </div>
             </section>
             <footer class="modal-card-foot" style="justify-content: flex-end;">
-                <button class="button is-primary" @click="handleSave" v-if="!isCodespace">Save</button>
-                <button class="button" @click="$emit('close')" v-if="isCodespace">Close</button>
+                <button class="button is-primary" @click="handleSave">Save</button>
             </footer>
         </div>
     </div>`

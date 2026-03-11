@@ -246,8 +246,10 @@ def get_notebook():
     _in_codespace = bool(os.environ.get('CODESPACES'))
     return dict(
         nb=notebook.get_json(),
-        gemini_api_key=('****' if _in_codespace and settings.get('gemini_api_key') else settings.get('gemini_api_key')),
-        claude_api_key=('****' if _in_codespace and settings.get('claude_api_key') else settings.get('claude_api_key')),
+        gemini_api_key=('' if _in_codespace else settings.get('gemini_api_key')),
+        claude_api_key=('' if _in_codespace else settings.get('claude_api_key')),
+        has_gemini_key=bool(settings.get('gemini_api_key')),
+        has_claude_key=bool(settings.get('claude_api_key')),
         debug=args.debug,
         active_ai_provider=settings.get('active_ai_provider'),
         ai_providers=AI_PROVIDER_REGISTRY,
@@ -260,6 +262,12 @@ def set_key():
     data = request.json
     gemini_api_key = data.get('gemini_api_key', '')
     claude_api_key = data.get('claude_api_key', '')
+    # In Codespaces, preserve env-var keys when user saves with empty fields
+    if os.environ.get('CODESPACES'):
+        if not gemini_api_key and os.environ.get('GEMINI_API_KEY'):
+            gemini_api_key = os.environ['GEMINI_API_KEY']
+        if not claude_api_key and os.environ.get('CLAUDE_API_KEY'):
+            claude_api_key = os.environ['CLAUDE_API_KEY']
     settings['gemini_api_key'] = gemini_api_key
     settings['claude_api_key'] = claude_api_key
     # Save settings to file

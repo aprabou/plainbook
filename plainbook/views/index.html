@@ -160,6 +160,8 @@
         :gemini-api-key="geminiApiKey"
         :claude-api-key="claudeApiKey"
         :is-codespace="isCodespace"
+        :has-gemini-key="hasGeminiKey"
+        :has-claude-key="hasClaudeKey"
         @close="showSettings = false"
         @save="(keys) => {showSettings = false; saveSettings(keys); }"
     />
