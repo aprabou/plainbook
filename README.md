@@ -3,8 +3,8 @@
 Plainbooks allow users to create and communicate data analysis and science using natural language. 
 
 Plainbooks are notebooks that combine instructions and results, similarly to Jupyter notebooks. 
-The difference is that Plainbook are in natural language, rather than code; the code is generated "under the hood" using AI. 
-The use of plain language allows you to share your data analysis and science with a much wider audience, including people who do not know how to code, and to make it easier for everyone to understand what you are doing. 
+The difference is that Plainbook are in natural language: the code is generated "under the hood" using AI. 
+The use of plain language allows you to share your data analysis and science with a much wider audience, including people who do not know how to code. 
 
 Plainbook can use multiple AIs to check that the code faithfully implements the natural language description, and can include tests to further validate the notebook. 
 When you share a notebook, the recipients can also check that the code under the hood implements the natural-language tasks. Recipients can also edit the plainbook, regenerate the code, and rerun it, just as in Jupyter notebooks. 
@@ -17,9 +17,9 @@ Thus, the goal of the Plainbook project is to replicate in natural language what
 * [5 min Introductory video](https://youtu.be/Mkv5cl5rA7s). 
 * **Run it on Codespaces:** You can run plainbook right here on GitHub, with a trial Claude key, as follows:
     * Create a codespace (Click on Code > Codespaces in the GitHub interface).
-    * Wait about 3 minutes, until after it prints those "post-start" commands run.  Be patient, it takes long time. 
-    * Plainbook will open in a popup browser window.  Find the pop-up (it's generally blocked by the browser; you will see a small icon to open it, maybe in the URL bar) and allow it. 
-    * The Claude key provided in the trial has limited spend that may run out. 
+    * Wait about 3 minutes, until after it finishes the postStartCommand.
+    * Once you see the button "Open in Browser" for port 8080 on the lower right, press it. 
+    * The Claude key provided in the trial has a low spending limit, and might not work.  You can add your own keys. 
 
 Example plainbooks:
 * Plainbook on soccer matches: [Download Soccer_w_Tests.plnb](https://github.com/lucadealfaro/plainbook/raw/main/examples/Soccer_w_Tests.plnb).  
@@ -41,7 +41,7 @@ plainbook notebook.nlb
 
 You can use any file name you like, with any extension you like. 
 
-**AI API Keys.** You need a Gemini or Claude API key to use Plainbook.  Click on the Settings button (the gear on the top right) and it will contain links where to get such keys.  The lead developer is spending only about $2/month on Gemini and Claude together, so the cost should be very low.
+**AI API Keys.** You need a Gemini or Claude API key to use Plainbook.  Click on the Settings button (the gear on the top right) to see instructions on how to set them.  The lead developer is spending only about $2/month on Gemini and Claude together, so the expense should be very low.
 
 ### Resources
 
