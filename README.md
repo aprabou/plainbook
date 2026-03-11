@@ -32,8 +32,11 @@ You can use any file name you like, with any extension you like.
 
 ### Examples 
 
-* [Introductory video](https://youtu.be/Mkv5cl5rA7s). 
-* Plainbook on football matches: [Download football.plb](https://github.com/lucadealfaro/plainbook/raw/main/examples/football.plb).  
+* [30s short video](https://youtu.be/0t4ND8wPoYA)
+* [5 min Introductory video](https://youtu.be/Mkv5cl5rA7s). 
+* Plainbook on soccer matches: [Download Soccer_w_Tests.plnb](https://github.com/lucadealfaro/plainbook/raw/main/examples/Soccer_w_Tests.plnb).  
+
+You can also run plainbook on codespaces. Just open the codespace, be patient while it installs the dependencies, and then click on the green "Open in Browser" button on the bottom right.  This will open the Soccer plainbook of the short video above, which you can edit and run.
 
 ### Resources
 
