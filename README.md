@@ -3,12 +3,11 @@
 Plainbooks allow users to create and communicate data analysis and science using natural language. 
 
 Plainbooks are notebooks that combine instructions and results, similarly to Jupyter notebooks. 
-The difference is that in Plainbook, users view natural language, rather than code. 
-The code is generated "under the hood" using AI. 
-This allows you to share your data analysis and science with a much wider audience, including people who do not know how to code, and to make it easier for everyone to understand what you are doing. 
+The difference is that Plainbook are in natural language, rather than code; the code is generated "under the hood" using AI. 
+The use of plain language allows you to share your data analysis and science with a much wider audience, including people who do not know how to code, and to make it easier for everyone to understand what you are doing. 
 
-When you share a plainbook, recipients can use AI to check that the "notebook does not lie", that is, that the code implementation is faithful to the natural language description, and they can also run tests, as a further check. 
-Recipients can also edit the natural language description, and regenerate the code, to adapt the notebook to their needs.
+Plainbook can use multiple AIs to check that the code faithfully implements the natural language description, and can include tests to further validate the notebook. 
+When you share a notebook, the recipients can also check that the code under the hood implements the natural-language tasks. Recipients can also edit the plainbook, regenerate the code, and rerun it, just as in Jupyter notebooks. 
 
 Thus, the goal of the Plainbook project is to replicate in natural language what made Juptyter notebooks so successful: the ability to share together code and results, so that any recipient can validate and modify the notebook.
 
@@ -17,10 +16,9 @@ Thus, the goal of the Plainbook project is to replicate in natural language what
 * [30s short video](https://youtu.be/0t4ND8wPoYA)
 * [5 min Introductory video](https://youtu.be/Mkv5cl5rA7s). 
 * **Run it on Codespaces:** You can run plainbook right here on GitHub, with a trial Claude key, as follows:
-    * Go to [plainscience/plainbook-trial](https://github.com/plainscience/plainbook-trial) 
-    * Create a codespace (Click on Code > Codespaces in the GitHub interface)
-    * Wait about 3 minutes
-    * Plainbook will open in a popup browser window.  Find the pop-up and allow it. 
+    * Create a codespace (Click on Code > Codespaces in the GitHub interface).
+    * Wait about 3 minutes, until after it prints those "post-start" commands run.  Be patient, it takes long time. 
+    * Plainbook will open in a popup browser window.  Find the pop-up (it's generally blocked by the browser; you will see a small icon to open it, maybe in the URL bar) and allow it. 
     * The Claude key provided in the trial has limited spend that may run out. 
 
 Example plainbooks:
@@ -61,7 +59,7 @@ Plainbooks consist of three types of cells:
 
 * **Test cells**, where the user can write properties that should hold at certain points of the notebook to check that everything is working as expected.
 
-Differently from other notebook systems, Plainbooks are executed from start to end,  so that the results follow the same order in which we humans read the cells. Plainbooks relies on a [checkpointing kernel](https://github.com/lucadealfaro/snapshot-kernel) to remember the execution state after each cell, so that it can re-run a cell without having to start from the beginning.
+Differently from standard Jupyter notebooks, Plainbooks cells are guaranteed to be executed in order, from first to last, matching the order in which humans read the cells. Plainbooks relies on a [checkpointing kernel](https://github.com/lucadealfaro/snapshot-kernel) to remember the execution state after each cell, so that it can re-run a cell without having to start from the beginning.
 
 **AI Providers**
 Plainbook is designed to work with multiple AI providers, and users can choose which provider to use for code generation and checking.  The system is designed to allow users to easily switch between providers, so that users can cross-check that the implementation obtained from one provider is considered valid by another provider.  This avoids over-reliance on a single class of AI models. 
