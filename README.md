@@ -16,9 +16,11 @@ Thus, the goal of the Plainbook project is to replicate in natural language what
 
 * [30s short video](https://youtu.be/0t4ND8wPoYA)
 * [5 min Introductory video](https://youtu.be/Mkv5cl5rA7s). 
+* **Run it on Codespaces:** You can run plainbook right here on GitHub. Create a codespace (Click on Code > Codespaces in the GitHub interface); be patient while it installs the dependencies. After about 3 minutes, youwill see a green button "Open in Browser" on the bottom right.  If you click on it, it will open the Soccer plainbook of the short video above, which you can edit and run.  The example comes with a pre-configured Claude API key (with a usage limit). 
+
+Example plainbooks:
 * Plainbook on soccer matches: [Download Soccer_w_Tests.plnb](https://github.com/lucadealfaro/plainbook/raw/main/examples/Soccer_w_Tests.plnb).  
 
-You can also run plainbook on GitHub Codespaces. Just open the codespace (Click on Code > Codespaces in the GitHub interface), be patient while it installs the dependencies, and then click on the green "Open in Browser" button on the bottom right.  This will open the Soccer plainbook of the short video above, which you can edit and run.
 
 ## Installation and use
 
