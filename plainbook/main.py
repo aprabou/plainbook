@@ -59,6 +59,11 @@ try:
 except FileNotFoundError:
     settings = {}
 
+# Fill in missing API keys from environment variables (e.g. Codespaces secrets)
+for env_var, setting_key in [('CLAUDE_API_KEY', 'claude_api_key'), ('GEMINI_API_KEY', 'gemini_api_key')]:
+    if not settings.get(setting_key) and os.environ.get(env_var):
+        settings[setting_key] = os.environ[env_var]
+
 AI_PROVIDER_REGISTRY = [
     {"id": "gemini:2.5-flash", "name": "Gemini 2.5 Flash", "major": "gemini", "key_setting": "gemini_api_key", "model": "gemini-2.5-flash"},
     {"id": "gemini:2.5-pro",   "name": "Gemini 2.5 Pro",   "major": "gemini", "key_setting": "gemini_api_key", "model": "gemini-2.5-pro"},
@@ -238,13 +243,15 @@ def login():
 @stateful
 @require_token
 def get_notebook():
+    _in_codespace = bool(os.environ.get('CODESPACES'))
     return dict(
         nb=notebook.get_json(),
-        gemini_api_key=settings.get('gemini_api_key'),
-        claude_api_key=settings.get('claude_api_key'),
+        gemini_api_key=('****' if _in_codespace and settings.get('gemini_api_key') else settings.get('gemini_api_key')),
+        claude_api_key=('****' if _in_codespace and settings.get('claude_api_key') else settings.get('claude_api_key')),
         debug=args.debug,
         active_ai_provider=settings.get('active_ai_provider'),
         ai_providers=AI_PROVIDER_REGISTRY,
+        is_codespace=_in_codespace,
     )
 
 @post('/set_key')

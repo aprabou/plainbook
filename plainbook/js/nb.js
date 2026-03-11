@@ -68,6 +68,7 @@ createApp({
         const claudeApiKey = ref('');
         const activeAiProvider = ref(null);
         const aiProviderRegistry = ref([]);
+        const isCodespace = ref(false);
 
         const availableAiProviders = computed(() => {
             const apiKeys = {
@@ -160,6 +161,7 @@ createApp({
                 activeAiProvider.value = r.active_ai_provider || null;
                 aiProviderRegistry.value = r.ai_providers || [];
                 debug.value = r.debug || false;
+                isCodespace.value = r.is_codespace || false;
             } catch (err) {
                 error.value = err.message;
                 throw new Error("Error in loading notebook", { cause: err });
@@ -857,7 +859,7 @@ createApp({
             saveSettings, showSettings, showInfo, showTestHelp,
             genError, uiError, closeUiError, debug, sendDebugRequest,
             explanationEditKey, deleteCell, moveCell, geminiApiKey, claudeApiKey,
-            clearOutputs, activeAiProvider, availableAiProviders, setActiveAiProvider,
+            clearOutputs, activeAiProvider, availableAiProviders, setActiveAiProvider, isCodespace,
             restarting, ui_restart,
             ui_runTestCell, ui_runAllTests, ui_saveExplanationAndRunTest, ui_forceRegenerateTestCode };
     },

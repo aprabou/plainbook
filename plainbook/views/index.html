@@ -159,6 +159,7 @@
         :is-active="showSettings"
         :gemini-api-key="geminiApiKey"
         :claude-api-key="claudeApiKey"
+        :is-codespace="isCodespace"
         @close="showSettings = false"
         @save="(keys) => {showSettings = false; saveSettings(keys); }"
     />
